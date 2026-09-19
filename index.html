@@ -1,0 +1,3549 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interaktiver Ruhestands- & Entnahme-Simulator nach der bewährten 3-Töpfe-Strategie (Tagesgeld, flexible Festgeld-Treppe, Aktien-ETF).">
+  <meta property="og:title" content="3-Töpfe Ruhestands- & Entnahme-Simulator">
+  <meta property="og:description" content="Interaktive Ruhestands- und Entnahmeplanung nach der 3-Töpfe-Strategie mit flexibler Festgeld-Treppe.">
+  <meta property="og:type" content="website">
+  <title>3-Töpfe Ruhestands- & Entnahme-Simulator</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            pot1: {
+              DEFAULT: '#2563eb', // Blue
+              light: '#dbeafe',
+              border: '#1d4ed8'
+            },
+            pot2: {
+              DEFAULT: '#059669', // Emerald
+              light: '#d1fae5',
+              border: '#047857'
+            },
+            pot3: {
+              DEFAULT: '#7c3aed', // Purple
+              light: '#ede9fe',
+              border: '#6d28d9'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Range Slider Styling */
+    input[type=range] {
+      accent-color: #4f46e5;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Kopfbereich / Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+          <i data-lucide="layers" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            3-Töpfe Ruhestands-Simulator
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">v2.0 Pro</span>
+          </h1>
+          <p class="text-xs text-slate-500 hidden sm:block">Entnahme- & Vermögensplanung für den Ruhestand nach der bewährten 3-Töpfe-Strategie</p>
+        </div>
+      </div>
+
+      <!-- Quick Preset Szenarien & Hash-Funktionen -->
+      <div class="flex items-center gap-2 flex-wrap text-xs">
+        <span class="text-slate-400 font-medium hidden md:inline">Szenarien:</span>
+        <button onclick="applyScenario('default')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition flex items-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Standard
+        </button>
+        <button onclick="applyScenario('rentenstart')" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium transition flex items-center gap-1.5">
+          <i data-lucide="piggy-bank" class="w-3.5 h-3.5"></i> Rente (400 €)
+        </button>
+        <button onclick="applyScenario('komfort')" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium transition flex items-center gap-1.5">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Komfort (600 €)
+        </button>
+        <button onclick="applyScenario('etfFocus')" class="px-2.5 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium transition flex items-center gap-1.5">
+          <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> ETF-Fokus
+        </button>
+
+        <div class="h-4 w-px bg-slate-300 mx-1 hidden sm:block"></div>
+
+        <!-- Hash Aktionen -->
+        <button onclick="saveToHash()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition flex items-center gap-1.5 shadow-xs" title="Einstellungen im URL-Hash speichern & Link kopieren">
+          <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Hash speichern
+        </button>
+        <button onclick="openLoadModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition flex items-center gap-1.5 border border-slate-200" title="Gespeicherten Hash eingeben & laden">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Hash laden
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hauptcontainer -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- ============================================================ -->
+      <!-- LINKE SPALTE: DIE STELLSCHRAUBEN (INPUTS)                     -->
+      <!-- ============================================================ -->
+      <section class="lg:col-span-5 xl:col-span-4 space-y-5">
+        
+        <!-- Box 1: Basis-Daten -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4 text-indigo-600"></i>
+              1. Basis-Daten
+            </h2>
+            <span class="text-xs text-slate-400">Grundparameter</span>
+          </div>
+
+          <!-- Startkapital -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center text-sm">
+              <label for="startCapital" class="font-medium text-slate-700 flex items-center gap-1">
+                Startkapital
+                <span class="text-xs text-slate-400 font-normal">(verfügbares Vermögen)</span>
+              </label>
+              <div class="relative">
+                <input type="number" id="startCapitalInput" min="10000" max="1000000" step="1000" value="50000"
+                  class="w-28 text-right font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+              </div>
+            </div>
+            <input type="range" id="startCapital" min="10000" max="200000" step="1000" value="50000"
+              class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>10.000 €</span>
+              <span>100.000 €</span>
+              <span>200.000 €+</span>
+            </div>
+          </div>
+
+          <!-- Monatliche Entnahme -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center text-sm">
+              <label for="monthlyWithdrawal" class="font-medium text-slate-700 flex items-center gap-1">
+                Monatliche Entnahme
+                <span class="text-xs text-indigo-600 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded">Netto</span>
+              </label>
+              <input type="number" id="monthlyWithdrawalInput" min="0" max="5000" step="50" value="0"
+                class="w-28 text-right font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+            </div>
+            <input type="range" id="monthlyWithdrawal" min="0" max="5000" step="25" value="0"
+              class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span class="font-medium text-indigo-600">0 € (Aufbau)</span>
+              <span>2.500 €</span>
+              <span>5.000 €</span>
+            </div>
+            <p id="withdrawalYearlyInfo" class="text-xs text-slate-500 italic flex items-center gap-1">
+              <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>Entspricht anfänglich <strong>0 €</strong> pro Jahr</span>
+            </p>
+          </div>
+
+          <!-- Ansparphase / Aufschubzeit vor Entnahme -->
+          <div class="space-y-1.5 pt-2 border-t border-slate-100">
+            <div class="flex justify-between items-center text-sm">
+              <label for="accumulationYears" class="font-medium text-slate-700 flex items-center gap-1">
+                Ansparphase / Aufschub
+                <span id="accumulationBadge" class="text-xs text-slate-500 font-normal bg-slate-100 px-1.5 py-0.5 rounded">Sofort</span>
+              </label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="accumulationYearsInput" min="0" max="25" step="1" value="0"
+                  class="w-16 text-right font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                <span class="text-xs font-semibold text-slate-600">Jahre</span>
+              </div>
+            </div>
+            <input type="range" id="accumulationYears" min="0" max="25" step="1" value="0"
+              class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span class="font-medium text-indigo-600">0 J. (Sofort)</span>
+              <span>5 Jahre</span>
+              <span>25 Jahre</span>
+            </div>
+            <p id="accumulationInfoText" class="text-xs text-slate-500 italic flex items-center gap-1">
+              <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>Entnahme startet sofort ab Jahr 1</span>
+            </p>
+          </div>
+
+          <!-- Monatliche Sparrate während Ansparphase (nur aktiv/sichtbar wenn Ansparphase > 0) -->
+          <div id="monthlySavingsContainer" class="hidden space-y-1.5 p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100 transition-all">
+            <div class="flex justify-between items-center text-sm">
+              <label for="monthlySavings" class="font-medium text-indigo-950 flex items-center gap-1">
+                <i data-lucide="trending-up" class="w-3.5 h-3.5 text-indigo-600"></i>
+                Sparrate in Ansparphase
+                <span class="text-[10px] text-indigo-700 font-bold bg-indigo-100 px-1.5 py-0.5 rounded">ETF-Aufbau</span>
+              </label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="monthlySavingsInput" min="0" max="5000" step="50" value="0"
+                  class="w-24 text-right font-bold text-slate-900 bg-white border border-indigo-200 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500">
+                <span class="text-xs font-semibold text-slate-600">€/Mo.</span>
+              </div>
+            </div>
+            <input type="range" id="monthlySavings" min="0" max="3000" step="25" value="0"
+              class="w-full h-2 bg-indigo-200 rounded-lg cursor-pointer accent-indigo-600">
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span class="font-medium text-indigo-700">0 € (Nur Startkapital)</span>
+              <span>1.000 €</span>
+              <span>3.000 €</span>
+            </div>
+            <p class="text-[11px] text-indigo-700/80 italic">Fließt während der Ansparjahre monatlich zusätzlich in Topf 3 (Aktien-ETF).</p>
+          </div>
+
+          <!-- Inflation auf Entnahme -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center text-sm">
+              <label for="inflationRate" class="font-medium text-slate-700 flex items-center gap-1">
+                Inflation auf Entnahme
+                <span class="text-xs text-slate-400 font-normal">p.a.</span>
+              </label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="inflationRateInput" min="0" max="10.0" step="0.1" value="2.0"
+                  class="w-20 text-right font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                <span class="text-xs font-semibold text-slate-600">%</span>
+              </div>
+            </div>
+            <input type="range" id="inflationRate" min="0" max="10.0" step="0.1" value="2.0"
+              class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>0,0 %</span>
+              <span>2,0 % (EZB-Ziel)</span>
+              <span>10,0 %</span>
+            </div>
+          </div>
+
+          <!-- Startalter (für Elternansicht) -->
+          <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-sm">
+            <label for="startAge" class="text-slate-600 font-medium flex items-center gap-1.5">
+              <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+              Startalter bei Beginn:
+            </label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="startAge" min="40" max="95" step="1" value="65"
+                class="w-16 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white">
+              <span class="text-xs text-slate-500">Jahre</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Box 2: Die 3-Töpfe Aufteilung -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i>
+              2. Topf-Aufteilung
+            </h2>
+            <span id="potCoverageBadge" class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">100% Gedeckt</span>
+          </div>
+
+          <!-- Mini Visuelle Vorschau der Töpfe -->
+          <div class="space-y-1.5">
+            <div class="h-3 w-full bg-slate-100 rounded-full flex overflow-hidden shadow-inner">
+              <div id="barPot1" class="bg-blue-600 transition-all duration-300" style="width: 0%" title="Topf 1: Tagesgeld"></div>
+              <div id="barPot2" class="bg-emerald-500 transition-all duration-300" style="width: 80%" title="Topf 2: Festgeld"></div>
+              <div id="barPot3" class="bg-purple-600 transition-all duration-300" style="width: 20%" title="Topf 3: Aktien-ETF"></div>
+            </div>
+            <div class="flex justify-between text-[11px] font-medium text-slate-500">
+              <span class="text-blue-600 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span> T1: <span id="labelSummaryPot1">0 €</span>
+              </span>
+              <span class="text-emerald-600 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> T2: <span id="labelSummaryPot2">40.000 €</span>
+              </span>
+              <span class="text-purple-600 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-purple-600 inline-block"></span> T3: <span id="labelSummaryPot3">10.000 €</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Topf 1: Tagesgeld Puffer (in Monaten) -->
+          <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-1.5">
+            <div class="flex justify-between items-center text-sm">
+              <label for="pot1Months" class="font-medium text-blue-900 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                Topf 1 (Tagesgeld - Puffer)
+              </label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="pot1MonthsInput" min="0" max="60" step="1" value="24"
+                  class="w-16 text-right font-bold text-blue-900 bg-white border border-blue-200 rounded-lg px-2 py-0.5 text-sm focus:ring-2 focus:ring-blue-500">
+                <span class="text-xs font-semibold text-blue-700">Monate</span>
+              </div>
+            </div>
+            <input type="range" id="pot1Months" min="0" max="60" step="1" value="24"
+              class="w-full h-2 bg-blue-200 rounded-lg cursor-pointer accent-blue-600">
+            <div class="flex justify-between items-center text-xs text-blue-800">
+              <span>Initialer Betrag: <strong id="initialPot1Val">0 €</strong></span>
+              <span class="text-[11px] text-blue-600" id="pot1Explanation">(24 × 0 €)</span>
+            </div>
+          </div>
+
+          <!-- Topf 2 & Topf 3 Restkapital Aufteilung -->
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <div class="flex justify-between items-center text-xs text-slate-500">
+              <span class="font-semibold text-slate-700 uppercase tracking-wide">Restkapital Aufteilung:</span>
+              <span id="remainingCapitalVal" class="font-bold text-slate-900">50.000 €</span>
+            </div>
+
+            <!-- Topf 2: Festgeld (Treppe) mit dynamischen Konten -->
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center text-sm">
+                <label for="pot2Share" class="font-medium text-emerald-900 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  Topf 2 (Festgeld - Treppe)
+                </label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="pot2ShareInput" min="0" max="100" step="1" value="80"
+                    class="w-16 text-right font-bold text-emerald-900 bg-white border border-emerald-200 rounded-lg px-2 py-0.5 text-sm focus:ring-2 focus:ring-emerald-500">
+                  <span class="text-xs font-semibold text-emerald-700">%</span>
+                </div>
+              </div>
+              <input type="range" id="pot2Share" min="0" max="100" step="1" value="80"
+                class="w-full h-2 bg-emerald-200 rounded-lg cursor-pointer accent-emerald-600">
+              <div class="flex justify-between items-center text-xs text-emerald-800">
+                <span>Startwert Topf 2: <strong id="initialPot2Val">40.000 €</strong></span>
+                <span class="text-[11px] text-emerald-700 font-semibold" id="fgAvgRateSummary">Ø 3,3 % p.a.</span>
+              </div>
+
+              <!-- Festgeld-Treppe: Dynamische Konten-Verwaltung -->
+              <div class="pt-2 border-t border-emerald-200/70 space-y-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-emerald-950 flex items-center gap-1">
+                      <i data-lucide="layers-3" class="w-3.5 h-3.5 text-emerald-600"></i>
+                      Festgeldkonten (<span id="fgCountBadge">3</span>)
+                    </span>
+                    <span id="fgShareSumBadge" class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded" title="Summe der Anteile">100%</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <button type="button" onclick="distributeFestgeldSharesEvenly()" class="text-[11px] px-2 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-medium transition" title="Anteile gleichmäßig auf alle Konten aufteilen">
+                      Gleichmäßig %
+                    </button>
+                    <button type="button" onclick="addFestgeldAccount()" class="text-[11px] px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition flex items-center gap-1 shadow-xs" title="Neues Festgeldkonto hinzufügen">
+                      <i data-lucide="plus" class="w-3 h-3"></i> Konto +
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Dynamische Kontenliste -->
+                <div id="festgeldAccountsList" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-0.5">
+                  <!-- Dynamisch per JS generiert -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Topf 3: ETF (Rendite) - Automatischer Rest -->
+            <div class="pt-2 border-t border-slate-200 space-y-1 text-sm">
+              <div class="flex justify-between items-center">
+                <span class="font-medium text-purple-900 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                  Topf 3 (ETF - Rendite)
+                </span>
+                <span class="font-bold text-purple-900 bg-purple-100 px-2 py-0.5 rounded text-xs" id="pot3ShareLabel">
+                  20 % Rest
+                </span>
+              </div>
+              <div class="flex justify-between text-xs text-purple-800">
+                <span>Startwert Topf 3: <strong id="initialPot3Val">10.000 €</strong></span>
+                <span class="text-[11px] text-purple-600">Langfristige Rendite</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Box 3: Rendite-Annahmen & Zeithorizont -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <i data-lucide="percent" class="w-4 h-4 text-indigo-600"></i>
+              3. Renditen & Zeitraum
+            </h2>
+            <span class="text-xs text-slate-400">p.a. Zinsen</span>
+          </div>
+
+          <!-- Zins Topf 1 (Tagesgeld) -->
+          <div class="space-y-1">
+            <div class="flex justify-between items-center text-sm">
+              <label for="returnPot1" class="text-slate-700 font-medium flex items-center gap-1 text-xs">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                Zins Topf 1 (Tagesgeld)
+              </label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="returnPot1Input" min="0" max="10.0" step="0.1" value="2.5"
+                  class="w-16 text-right font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded px-1.5 py-0.5 text-xs">
+                <span class="text-xs text-slate-500">%</span>
+              </div>
+            </div>
+            <input type="range" id="returnPot1" min="0" max="10.0" step="0.1" value="2.5"
+              class="w-full h-1.5 bg-slate-200 rounded cursor-pointer accent-blue-600">
+          </div>
+
+          <!-- Zins Topf 2 (Festgeld-Treppe gewichteter Durchschnitt) -->
+          <div class="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-100 flex items-center justify-between text-xs">
+            <div class="space-y-0.5">
+              <span class="font-medium text-emerald-950 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Ø Zins Topf 2 (Festgeld-Treppe)
+              </span>
+              <p class="text-[11px] text-emerald-700">Berechnet aus den Festgeldkonten in Box 2</p>
+            </div>
+            <div class="text-right">
+              <span id="returnPot2Display" class="font-mono font-bold text-xs text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-2xs">3,3 % p.a.</span>
+            </div>
+          </div>
+
+          <!-- Rendite Topf 3 (ETF) -->
+          <div class="space-y-1">
+            <div class="flex justify-between items-center text-sm">
+              <label for="returnPot3" class="text-slate-700 font-medium flex items-center gap-1 text-xs">
+                <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                Rendite Topf 3 (ETF)
+              </label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="returnPot3Input" min="-5.0" max="15.0" step="0.5" value="7.0"
+                  class="w-16 text-right font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded px-1.5 py-0.5 text-xs">
+                <span class="text-xs text-slate-500">%</span>
+              </div>
+            </div>
+            <input type="range" id="returnPot3" min="-5.0" max="15.0" step="0.5" value="7.0"
+              class="w-full h-1.5 bg-slate-200 rounded cursor-pointer accent-purple-600">
+            <div class="flex justify-between text-[10px] text-slate-400">
+              <span>-5,0 % (Krise)</span>
+              <span>7,0 % (Historisch)</span>
+              <span>15,0 %</span>
+            </div>
+          </div>
+
+          <!-- Simulationszeitraum -->
+          <div class="pt-3 border-t border-slate-100 space-y-1.5">
+            <div class="flex justify-between items-center text-sm">
+              <label for="simulationYears" class="font-medium text-slate-800 flex items-center gap-1">
+                <i data-lucide="calendar" class="w-4 h-4 text-indigo-600"></i>
+                Simulationszeitraum
+              </label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="simulationYearsInput" min="5" max="50" step="1" value="30"
+                  class="w-16 text-right font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg px-2 py-0.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                <span class="text-xs font-semibold text-slate-600">Jahre</span>
+              </div>
+            </div>
+            <input type="range" id="simulationYears" min="5" max="50" step="1" value="30"
+              class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>5 Jahre</span>
+              <span>30 Jahre</span>
+              <span>50 Jahre</span>
+            </div>
+            <p id="endAgeInfo" class="text-xs text-slate-500 italic mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Box 4: Erweiterte Experten-Optionen (Akkordeon, standardmäßig eingeklappt) -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition">
+          <button type="button" onclick="toggleExpertOptions()" class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50/70 transition">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-sm font-bold text-slate-900">4. Experten-Optionen</h2>
+                  <span id="expertActiveBadge" class="hidden text-[10px] font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded">Aktiv</span>
+                  <span class="text-[11px] text-slate-400 font-normal">Optional</span>
+                </div>
+                <p class="text-[11px] text-slate-500">Marktrisiko, Crash-Szenarien, Monte-Carlo & dynamische Entnahme</p>
+              </div>
+            </div>
+            <svg id="expertOptionsChevron" class="w-4 h-4 text-slate-400 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+
+          <!-- Ausklappbarer Inhalt -->
+          <div id="expertOptionsContent" class="hidden p-4 pt-0 space-y-4 border-t border-slate-100">
+            <!-- 1. Marktsimulation für Topf 3 -->
+            <div class="space-y-2 pt-2">
+              <label for="marketModeSelect" class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="dice-5" class="w-3.5 h-3.5 text-purple-600"></i>
+                Markt-Modell für Topf 3 (ETF)
+              </label>
+              <select id="marketModeSelect" onchange="onExpertOptionChange()" class="w-full text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
+                <option value="deterministic">Konstante Rendite (Standard, z.B. 7% p.a.)</option>
+                <option value="crash">Historisches Crash-Szenario (Sequence of Returns)</option>
+                <option value="monteCarlo">Monte-Carlo-Simulation (1.000 Pfade)</option>
+              </select>
+
+              <!-- Crash-Optionen -->
+              <div id="crashOptionsContainer" class="hidden p-3 bg-amber-50/70 rounded-xl border border-amber-200/80 space-y-2 text-xs">
+                <label for="crashPresetSelect" class="font-semibold text-amber-900 block">Crash-Szenario wählen:</label>
+                <select id="crashPresetSelect" onchange="onExpertOptionChange()" class="w-full text-xs font-medium text-slate-800 bg-white border border-amber-300 rounded-lg p-1.5 outline-none">
+                  <option value="finanzkrise2008">Finanzkrise 2008 (-38% in Jahr 1, dann kräftiger Rebound)</option>
+                  <option value="dotcom2000">Dot-Com-Blase 2000–2002 (-15%, -20%, -25% in Folge)</option>
+                  <option value="earlyShock">Früher Schock (-30% in Jahr 1, -15% in Jahr 2)</option>
+                  <option value="japanStag">Japan-Szenario (Verlorene Dekade: 15 Jahre Stagnation)</option>
+                  <option value="stagflation1970">Stagflation 1970er (Inflation bis 11% &amp; Baisse)</option>
+                  <option value="systemicCrisis">Systemkrise &amp; Zinssturz (-45% Crash &amp; Zinsen auf 0,25%)</option>
+                  <option value="custom">Benutzerdefinierter Marktschock</option>
+                </select>
+
+                <!-- Benutzerdefinierter Crash -->
+                <div id="customCrashFields" class="hidden">
+                  <div class="grid grid-cols-2 gap-2 pt-1 border-t border-amber-200/60">
+                    <div>
+                      <label for="customCrashYear" class="text-[10px] text-amber-800 block">Crash im Jahr:</label>
+                      <input type="number" id="customCrashYear" min="1" max="20" value="1" onchange="onExpertOptionChange()"
+                        class="w-full text-xs font-bold text-slate-800 bg-white border border-amber-300 rounded p-1 text-right">
+                    </div>
+                    <div>
+                      <label for="customCrashLoss" class="text-[10px] text-amber-800 block">Verlust in %:</label>
+                      <input type="number" id="customCrashLoss" min="-70" max="-10" step="5" value="-35" onchange="onExpertOptionChange()"
+                        class="w-full text-xs font-bold text-rose-700 bg-white border border-amber-300 rounded p-1 text-right">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Zinsumfeld-Kopplung (Nullzinsphase nach Schock) -->
+                <div class="pt-2 border-t border-amber-200/60">
+                  <label for="correlateInterestToggle" class="font-semibold text-amber-950 text-xs flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="correlateInterestToggle" onchange="onExpertOptionChange()" class="w-3.5 h-3.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500 accent-amber-600 cursor-pointer">
+                    <span>Zinsumfeld an Schock koppeln (Nullzins-Phase)</span>
+                  </label>
+                  <p class="text-[10px] text-amber-800/90 pt-0.5">
+                    Tagesgeld &amp; neu rolliertes Festgeld fallen nach Crash auf 0,25 % (wie nach 2008/2020).
+                  </p>
+                </div>
+
+                <p class="text-[11px] text-amber-800/90 leading-relaxed italic">
+                  💡 <strong>Didaktischer Nutzen:</strong> Zeigt direkt, wie Topf 1 &amp; 2 die Ausgaben puffern, sodass ETF-Anteile während der Baisse unangetastet bleiben.
+                </p>
+              </div>
+
+              <!-- Monte-Carlo Optionen -->
+              <div id="monteCarloOptionsContainer" class="hidden p-3 bg-purple-50/70 rounded-xl border border-purple-200/80 space-y-3 text-xs">
+                <!-- Rendite-Verteilungsmodell -->
+                <div class="space-y-1">
+                  <div class="flex justify-between items-center">
+                    <label for="mcDistributionModelSelect" class="font-semibold text-purple-900">Rendite-Verteilung:</label>
+                    <select id="mcDistributionModelSelect" onchange="onExpertOptionChange()" class="text-xs font-semibold text-purple-950 bg-white border border-purple-300 rounded-lg px-2 py-0.5 outline-none cursor-pointer">
+                      <option value="studentT" selected>Student-t / Fat Tails (ν=5, Realistisch)</option>
+                      <option value="lognormal">Klassisch / Gauß (Lognormal)</option>
+                    </select>
+                  </div>
+                  <p class="text-[10px] text-purple-700">
+                    Student-t bildet empirische Börsen-Crashes &amp; Leptokurtosis realistisch ab.
+                  </p>
+                </div>
+
+                <!-- ETF-Volatilität -->
+                <div class="pt-2 border-t border-purple-200/60 space-y-1">
+                  <div class="flex justify-between items-center">
+                    <label for="volatilityInput" class="font-semibold text-purple-900">ETF-Volatilität (Schwankung p.a.):</label>
+                    <div class="flex items-center gap-1">
+                      <input type="number" id="volatilityInput" min="5" max="35" step="0.5" value="15.0" onchange="onExpertOptionChange()"
+                        class="w-16 text-right font-bold text-purple-900 bg-white border border-purple-300 rounded px-1.5 py-0.5 text-xs">
+                      <span class="text-purple-700 font-semibold">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="volatilitySlider" min="5" max="35" step="0.5" value="15.0" oninput="document.getElementById('volatilityInput').value = this.value; onExpertOptionChange()"
+                    class="w-full h-1.5 bg-purple-200 rounded cursor-pointer accent-purple-600">
+                  <div class="flex justify-between text-[10px] text-purple-600">
+                    <span>5% (Niedrig)</span>
+                    <span>15% (MSCI World Schnitt)</span>
+                    <span>30% (Hoch)</span>
+                  </div>
+                </div>
+
+                <!-- Anzahl der Simulationspfade -->
+                <div class="pt-2 border-t border-purple-200/60 space-y-1.5">
+                  <div class="flex justify-between items-center">
+                    <label for="mcPathsSelect" class="font-semibold text-purple-900">Anzahl Pfade (Simulationen):</label>
+                    <div class="flex items-center gap-1.5">
+                      <select id="mcPathsSelect" onchange="syncMcPaths(this.value)" class="text-xs font-semibold text-purple-950 bg-white border border-purple-300 rounded-lg px-2 py-0.5 outline-none cursor-pointer">
+                        <option value="1000">1.000 (Schnell)</option>
+                        <option value="2500">2.500 (Empfohlen)</option>
+                        <option value="5000">5.000 (Präzise)</option>
+                        <option value="10000">10.000 (Labor)</option>
+                        <option value="custom">Individuell...</option>
+                      </select>
+                      <input type="number" id="mcPathsInput" min="500" max="25000" step="500" value="1000" oninput="onExpertOptionChange()" onchange="onExpertOptionChange()"
+                        class="hidden w-20 text-right font-bold text-purple-900 bg-white border border-purple-300 rounded px-1.5 py-0.5 text-xs">
+                    </div>
+                  </div>
+                  <p class="text-[10px] text-purple-700">
+                    Höhere Pfadanzahl senkt statistisches Rauschen auf unter ±0,5%.
+                  </p>
+                </div>
+
+                <!-- Zufalls- & Seed-Steuerung -->
+                <div class="pt-2 border-t border-purple-200/60 space-y-1.5">
+                  <div class="flex justify-between items-center">
+                    <label for="mcSeedModeSelect" class="font-semibold text-purple-900">Zufalls-Generator (Seed):</label>
+                    <select id="mcSeedModeSelect" onchange="onSeedModeChange()" class="text-xs font-semibold text-purple-950 bg-white border border-purple-300 rounded-lg px-2 py-0.5 outline-none cursor-pointer">
+                      <option value="fixed">🔒 Fester Seed (100% stabil)</option>
+                      <option value="random">🎲 Zufällig (pro Klick neu)</option>
+                    </select>
+                  </div>
+                  <div id="mcSeedCustomContainer" class="flex items-center justify-between gap-2 pt-0.5">
+                    <span class="text-[11px] text-purple-800">Aktiver Seed-Wert:</span>
+                    <div class="flex items-center gap-1.5">
+                      <input type="number" id="mcSeedInput" min="1" max="999999" value="42" onchange="onExpertOptionChange()"
+                        class="w-20 text-right font-mono font-bold text-purple-900 bg-white border border-purple-300 rounded px-1.5 py-0.5 text-xs" title="Deterministischer Startwert">
+                      <button type="button" onclick="rerollSeed()" class="px-2 py-0.5 rounded-lg bg-purple-200 hover:bg-purple-300 text-purple-900 font-semibold text-[11px] transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Zufälligen neuen Seed würfeln">
+                        <span>🎲 Neu</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="text-[11px] text-purple-800/90 leading-relaxed italic pt-1">
+                  💡 <strong>Tipp:</strong> Mit <em>Fester Seed</em> ist das Ergebnis zu 100 % reproduzierbar und teilbar. Mit <em>Neu</em> würfelst du sofort ein alternatives Börsen-Szenario.
+                </p>
+              </div>
+            </div>
+
+            <!-- 2. Dynamische Entnahme-Regeln -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+              <label for="withdrawalStrategySelect" class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-600"></i>
+                Entnahme-Strategie
+              </label>
+              <select id="withdrawalStrategySelect" onchange="onExpertOptionChange()" class="w-full text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
+                <option value="fixedInflation">Feste Entnahme + Inflation (Standard)</option>
+                <option value="guytonKlinger">Guyton-Klinger Guardrails (Dynamische Leitplanken)</option>
+                <option value="percentPortfolio">Prozentuale Entnahme (% des Restdepots)</option>
+              </select>
+
+              <!-- Guyton-Klinger Details -->
+              <div id="guytonKlingerOptionsContainer" class="hidden p-3 bg-indigo-50/70 rounded-xl border border-indigo-200/80 space-y-1.5 text-xs text-indigo-900">
+                <p class="font-semibold text-indigo-950">Intelligenter Selbstschutz:</p>
+                <ul class="list-disc pl-4 space-y-1 text-[11px] leading-relaxed text-indigo-900/90">
+                  <li><strong>Kapitalerhalt:</strong> Fällt das Portfolio um &gt; 20 %, wird die Inflationserhöhung im Folgejahr eingefroren (0 % Erhöhung).</li>
+                  <li><strong>Wohlstand:</strong> Bei starken Marktgewinnen wird die Entnahme um 10 % für Konsum/Reisen angehoben.</li>
+                </ul>
+              </div>
+
+              <!-- Prozentuale Entnahme Details -->
+              <div id="percentPortfolioOptionsContainer" class="hidden p-3 bg-indigo-50/70 rounded-xl border border-indigo-200/80 space-y-2 text-xs text-indigo-900">
+                <div class="flex justify-between items-center">
+                  <label for="withdrawalPercentRate" class="font-semibold">Jährlicher Entnahme-Prozentsatz:</label>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="withdrawalPercentRate" min="1.0" max="10.0" step="0.1" value="4.0" onchange="onExpertOptionChange()"
+                      class="w-16 text-right font-bold text-indigo-900 bg-white border border-indigo-300 rounded px-1.5 py-0.5 text-xs">
+                    <span class="font-semibold">%</span>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-indigo-200/60">
+                  <div>
+                    <label for="withdrawalFloor" class="text-[10px] text-indigo-700 block">Min. Floor (€/Mo.):</label>
+                    <input type="number" id="withdrawalFloor" min="0" max="3000" step="50" value="300" onchange="onExpertOptionChange()"
+                      class="w-full text-xs font-bold text-slate-800 bg-white border border-indigo-300 rounded p-1 text-right">
+                  </div>
+                  <div>
+                    <label for="withdrawalCap" class="text-[10px] text-indigo-700 block">Max. Cap (€/Mo.):</label>
+                    <input type="number" id="withdrawalCap" min="500" max="10000" step="100" value="1500" onchange="onExpertOptionChange()"
+                      class="w-full text-xs font-bold text-slate-800 bg-white border border-indigo-300 rounded p-1 text-right">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Rebalancing-Regeln -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+              <label for="rebalanceStrategySelect" class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-600"></i>
+                Rebalancing-Strategie
+              </label>
+              <select id="rebalanceStrategySelect" onchange="onExpertOptionChange()" class="w-full text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
+                <option value="annualCascade">Standard (Jährlich aus Festgeld, Rest aus ETF)</option>
+                <option value="threshold">Schwellenwert (Verkaufsstopp bei ETF-Verlustjahren)</option>
+                <option value="glidepath">Risiko-Gleitpfad (ETF-Anteil sinkt im Alter)</option>
+              </select>
+
+              <div id="thresholdInfoContainer" class="hidden p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-200/80 text-[11px] text-emerald-900 leading-relaxed italic">
+                🛡️ <strong>Baisse-Schutz:</strong> Ist die ETF-Jahresrendite negativ, wird die ETF-Ernte blockiert. Topf 1 & Festgeld puffern den Ausfall vollständig ab.
+              </div>
+
+              <div id="glidepathInfoContainer" class="hidden p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-200/80 text-[11px] text-emerald-900 leading-relaxed italic">
+                📉 <strong>Gleitpfad:</strong> Ab Alter 70 sinkt der ETF-Zielanteil jedes Jahr um 0,5 % zugunsten von Topf 2, um das Sequence-of-Returns-Risiko im Alter weiter zu senken.
+              </div>
+            </div>
+
+            <!-- Button: Auf Standard zurücksetzen -->
+            <div class="pt-2 flex justify-end">
+              <button type="button" onclick="resetExpertOptions()" class="text-xs text-slate-400 hover:text-slate-600 font-medium transition flex items-center gap-1">
+                <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Experten-Optionen zurücksetzen
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wissens-Box für Eltern -->
+        <div class="bg-indigo-50/70 rounded-2xl p-4 border border-indigo-100 text-xs text-indigo-950 space-y-2">
+          <div class="font-bold flex items-center gap-1.5 text-indigo-900">
+            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
+            Das 3-Töpfe-Prinzip verständlich erklärt:
+          </div>
+          <ul class="space-y-1.5 pl-4 list-disc text-indigo-900/90 leading-relaxed">
+            <li><strong>Topf 1 (Tagesgeld):</strong> Das monatliche Ausgabenkonto für 1–3 Jahre. Schützt vor Notverkäufen bei Börsentiefs.</li>
+            <li><strong>Topf 2 (Festgeld):</strong> Zinsbringende Sicherheitsstufe mit festen Laufzeiten. Füllt Topf 1 jährlich nach.</li>
+            <li><strong>Topf 3 (Aktien-ETF):</strong> Der Rendite-Motor. Wächst langfristig und wird nur bei Bedarf ("Ernte") angezapft.</li>
+          </ul>
+        </div>
+
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- RECHTE SPALTE: DAS DASHBOARD (OUTPUTS)                        -->
+      <!-- ============================================================ -->
+      <section class="lg:col-span-7 xl:col-span-8 space-y-5">
+        
+        <!-- Großer Chart Container (Oben) -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-4">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="line-chart" class="w-5 h-5 text-indigo-600"></i>
+                Vermögensverlauf & Topf-Verschiebung
+              </h2>
+              <p class="text-xs text-slate-500">
+                <span class="font-semibold text-slate-700">Flächenhöhe = Gesamtvermögen</span> (T1 + T2 + T3). Linien per Klick ein-/ausblendbar:
+              </p>
+            </div>
+
+            <!-- Interaktive Legenden-Pills mit Klick-Filtern -->
+            <div class="flex items-center gap-2 text-xs flex-wrap">
+              <!-- Die 3 Töpfe -->
+              <div class="flex items-center gap-1.5 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200/80">
+                <span class="text-[10px] uppercase font-bold text-slate-400 mr-0.5 tracking-wider">Töpfe:</span>
+                <span class="flex items-center gap-1 text-blue-700 font-semibold text-[11px]" title="Topf 1 (Tagesgeld) – Unterste Fläche">
+                  <span class="w-2.5 h-2.5 rounded-xs bg-blue-600 inline-block shadow-2xs"></span> T1
+                </span>
+                <span class="text-slate-300">|</span>
+                <span class="flex items-center gap-1 text-emerald-700 font-semibold text-[11px]" title="Topf 2 (Festgeld) – Mittlere Fläche">
+                  <span class="w-2.5 h-2.5 rounded-xs bg-emerald-500 inline-block shadow-2xs"></span> T2
+                </span>
+                <span class="text-slate-300">|</span>
+                <span class="flex items-center gap-1 text-purple-700 font-semibold text-[11px]" title="Topf 3 (Aktien-ETF) – Oberste Fläche">
+                  <span class="w-2.5 h-2.5 rounded-xs bg-purple-600 inline-block shadow-2xs"></span> T3
+                </span>
+              </div>
+
+              <!-- Button: Entnahmen-Linie umschalten -->
+              <button type="button" id="btnToggleWithdrawals" onclick="toggleWithdrawalsLine()"
+                class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                title="Klicken, um die rote Entnahmen-Linie ein- oder auszublenden">
+                <span class="w-3.5 h-0.5 border-t-2 border-dashed border-rose-500 inline-block"></span>
+                <span>Entnahmen</span>
+              </button>
+
+              <!-- Button: Monte-Carlo Bänder umschalten -->
+              <button type="button" id="btnTogglePercentiles" onclick="togglePercentilesLines()"
+                class="hidden px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition items-center gap-1.5 shadow-2xs cursor-pointer"
+                title="Klicken, um die Monte-Carlo Bänder (10. & 90. Perzentil) ein- oder auszublenden">
+                <span class="w-3.5 h-1.5 rounded-xs bg-indigo-200 border border-indigo-500 border-dashed inline-block"></span>
+                <span>10./90. Perzentil</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Canvas für Chart.js -->
+          <div class="relative w-full h-80 sm:h-96">
+            <canvas id="simulationChart"></canvas>
+          </div>
+
+          <!-- Ausklappbare Diagramm-Lesehilfe -->
+          <div class="bg-slate-50/90 rounded-xl border border-slate-200/80 text-xs overflow-hidden">
+            <button type="button" onclick="toggleChartHelp()" class="w-full px-3.5 py-2 flex items-center justify-between text-slate-700 hover:bg-slate-100/70 font-semibold transition text-left cursor-pointer">
+              <span class="flex items-center gap-2">
+                <i data-lucide="help-circle" class="w-4 h-4 text-indigo-600 shrink-0"></i>
+                <span>Diagramm-Lesehilfe: Was bedeuten die Flächen & Linien genau?</span>
+              </span>
+              <svg id="chartHelpChevron" class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div id="chartHelpContent" class="hidden px-3.5 pb-3 pt-1 border-t border-slate-200/60 text-slate-600 space-y-2">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-[11px]">
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                  <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-xs bg-gradient-to-t from-blue-600 via-emerald-500 to-purple-600 inline-block shrink-0"></span>
+                    Die 3 Farbflächen (Töpfe)
+                  </div>
+                  <p class="leading-relaxed text-slate-600">
+                    Stellen das vorhandene Kapital dar. Weil sie <strong>übereinandergestapelt</strong> sind, entspricht die <strong>oberste Konturkante dem Gesamtvermögen</strong> (Median-Erwartung).
+                  </p>
+                </div>
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                  <div class="font-bold text-rose-700 flex items-center gap-1.5">
+                    <span class="w-3.5 h-0.5 border-t-2 border-dashed border-rose-500 inline-block shrink-0"></span>
+                    Rote gestrichelte Linie
+                  </div>
+                  <p class="leading-relaxed text-slate-600">
+                    <strong>Kumulierte Entnahmen:</strong> Zeigt, wie viel Geld du dir über alle Jahre <em>in Summe für deinen Konsum ausgezahlt hast</em>. Sie steigt kontinuierlich an.
+                  </p>
+                </div>
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                  <div class="font-bold text-indigo-700 flex items-center gap-1.5">
+                    <span class="w-3.5 h-1.5 rounded-xs bg-indigo-100 border border-indigo-500 border-dashed inline-block shrink-0"></span>
+                    Gestrichelte Bänder (Stochastik)
+                  </div>
+                  <p class="leading-relaxed text-slate-600">
+                    <strong>Monte-Carlo Bandbreite:</strong> Die obere violette Linie (90. Perzentil) zeigt starken Börsen-Rückenwind, die untere graue Linie (10. Perzentil) einen anhaltenden Bärenmarkt.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hinweis zum Chart & Modus-Tag -->
+          <div class="flex items-center justify-between text-xs text-slate-400 bg-slate-50 px-3 py-2 rounded-xl">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-slate-400"></i>
+              Fahre mit der Maus über das Diagramm für die detaillierte Vermögens- & Entnahme-Aufschlüsselung.
+            </span>
+            <span id="chartInfoTag" class="font-medium text-slate-600"></span>
+          </div>
+        </div>
+
+        <!-- Dynamischer Monte-Carlo Ergebnis-Banner -->
+        <div id="monteCarloBanner" class="hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white rounded-2xl p-4 shadow-sm border border-indigo-800/50 space-y-3 animate-in fade-in duration-200">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-800/40 pb-2.5">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-indigo-500/30 border border-indigo-400/30 flex items-center justify-center text-indigo-300 shrink-0">
+                <i data-lucide="dice-5" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
+                  Monte-Carlo-Ergebnis (<span id="mcPathsBannerCount">1.000</span> Pfade)
+                  <span id="mcDistBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30">Student-t / Fat Tails</span>
+                  <span id="mcHardwareBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>GPU-Canvas aktiv</span>
+                  </span>
+                </h3>
+                <p class="text-[11px] text-indigo-200/80 flex items-center gap-2 flex-wrap pt-0.5">
+                  <span>Schwankung: <strong id="mcVolDisplay" class="text-white">15,0 %</strong> p.a.</span>
+                  <span>•</span>
+                  <span id="mcCalcTimeBadge" class="font-semibold text-indigo-300">⚡ Berechnet in -- ms</span>
+                  <span>•</span>
+                  <span id="mcSeedBadge" class="font-mono text-purple-300">🔒 Seed: 42</span>
+                </p>
+              </div>
+            </div>
+            <div class="text-left sm:text-right">
+              <span class="text-xs text-indigo-200/90 block">Erfolgswahrscheinlichkeit:</span>
+              <div id="mcSuccessRateValue" class="text-xl sm:text-2xl font-black text-emerald-400 tracking-tight leading-none mt-0.5">
+                -- %
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="bg-white/5 rounded-xl p-2 border border-white/10">
+              <span class="text-[10px] text-slate-400 block font-medium">10. Perzentil (Pessimistisch)</span>
+              <span id="mcP10Value" class="font-mono font-bold text-slate-200 text-xs sm:text-sm">-- €</span>
+            </div>
+            <div class="bg-indigo-500/10 rounded-xl p-2 border border-indigo-500/20">
+              <span class="text-[10px] text-indigo-300 block font-medium">50. Perzentil (Median)</span>
+              <span id="mcP50Value" class="font-mono font-bold text-indigo-200 text-xs sm:text-sm">-- €</span>
+            </div>
+            <div class="bg-white/5 rounded-xl p-2 border border-white/10">
+              <span class="text-[10px] text-purple-300 block font-medium">90. Perzentil (Optimistisch)</span>
+              <span id="mcP90Value" class="font-mono font-bold text-purple-200 text-xs sm:text-sm">-- €</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamischer Crash-Szenario Banner -->
+        <div id="crashBanner" class="hidden">
+          <div class="bg-amber-50 border border-amber-200 text-amber-950 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in duration-200">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🔥</span>
+              <div>
+                <span class="font-bold text-amber-900" id="crashBannerTitle">Historisches Crash-Szenario aktiv</span>
+                <p class="text-[11px] text-amber-800" id="crashBannerSub">Topf 1 & Festgeld puffern den Börsenabsturz ab</p>
+              </div>
+            </div>
+            <div class="shrink-0">
+              <span class="inline-flex items-center gap-1 font-semibold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px]">
+                <svg class="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                Keine ETF-Notverkäufe im Tief
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Kacheln (Darunter) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          
+          <!-- Kachel 1: Reichweite des Kapitals -->
+          <div id="kpiReachCard" class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm relative overflow-hidden transition-colors">
+            <div class="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
+              <span>Reichweite des Kapitals</span>
+              <div id="kpiReachIcon" class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="kpiReachValue" class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+              > 30 Jahre
+            </div>
+            <p id="kpiReachSub" class="text-xs text-emerald-600 font-semibold mt-1">
+              Kapital reicht über die volle Zeit!
+            </p>
+          </div>
+
+          <!-- Kachel 2: Restvermögen am Ende -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
+              <span>Restvermögen am Ende</span>
+              <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                <i data-lucide="wallet" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="kpiEndCapitalValue" class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+              0 €
+            </div>
+            <p id="kpiEndCapitalSub" class="text-xs text-slate-500 font-medium mt-1">
+              Nach 30 Jahren
+            </p>
+          </div>
+
+          <!-- Kachel 3: Insgesamt entnommen -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
+              <span>Insgesamt entnommen</span>
+              <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                <i data-lucide="hand-coins" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="kpiTotalWithdrawnValue" class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+              0 €
+            </div>
+            <p id="kpiTotalGainSub" class="text-xs text-indigo-600 font-medium mt-1">
+              Zinsgewinn: +0 €
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Ausklappbare Detail-Datentabelle -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/75 transition select-none" onclick="toggleDataTable()">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                <i data-lucide="table-2" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  Detaillierte Jahrestabelle
+                  <span id="tableRowsCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold">30 Jahre</span>
+                </h3>
+                <p class="text-xs text-slate-500">Jahresgenaue Aufschlüsselung von Entnahmen, Töpfen und Rebalancing</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="event.stopPropagation(); exportToCSV();" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-white text-slate-700 font-medium transition flex items-center gap-1.5 shadow-xs">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">CSV / Excel</span>
+              </button>
+              <div id="tableChevron" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 transition-transform duration-200">
+                <i data-lucide="chevron-down" class="w-5 h-5"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Einklappbarer Tabellen-Body -->
+          <div id="dataTableContainer" class="border-t border-slate-200 hidden">
+            <div class="overflow-x-auto max-h-96 custom-scrollbar">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-100/80 text-slate-700 font-semibold sticky top-0 border-b border-slate-200 backdrop-blur-xs z-10">
+                  <tr>
+                    <th scope="col" class="px-3.5 py-2.5">Jahr (Alter)</th>
+                    <th scope="col" class="px-3.5 py-2.5 text-right">Jahresentnahme</th>
+                    <th scope="col" class="px-3.5 py-2.5 text-right text-blue-700">Topf 1 (Tagesgeld)</th>
+                    <th scope="col" class="px-3.5 py-2.5 text-right text-emerald-700">Topf 2 (Festgeld)</th>
+                    <th scope="col" class="px-3.5 py-2.5 text-right text-purple-700">Topf 3 (ETF)</th>
+                    <th scope="col" class="px-3.5 py-2.5 text-right font-bold text-slate-900">Gesamtvermögen</th>
+                    <th scope="col" class="px-3.5 py-2.5 text-center">Status / Ereignis</th>
+                  </tr>
+                </thead>
+                <tbody id="simulationTableBody" class="divide-y divide-slate-100">
+                  <!-- Dynamische Zeilen via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Fußzeile / Footer -->
+  <footer class="bg-white border-t border-slate-200 mt-8 py-4">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div>
+        <strong>3-Töpfe Ruhestands-Simulator</strong> – Entwickelt für transparente Familien-Finanzberatung & Generationengespräche.
+      </div>
+      <div class="text-slate-400">
+        Alle Angaben ohne Gewähr. Wertentwicklungen der Vergangenheit sind keine Garantie für die Zukunft.
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================ -->
+  <!-- MODALS & TOAST NOTIFICATION                                   -->
+  <!-- ============================================================ -->
+
+  <!-- Toast Benachrichtigung -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm border border-slate-700">
+      <div id="toastIcon" class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+      </div>
+      <span id="toastMessage" class="font-medium">Nachricht</span>
+    </div>
+  </div>
+
+  <!-- Modal: Hash Speichern & Teilen -->
+  <div id="saveModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="share-2" class="w-5 h-5 text-indigo-600"></i>
+          Konfiguration als Hash gespeichert
+        </h3>
+        <button onclick="closeModal('saveModal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Alle Einstellungen inkl. aller Konten deiner <strong>Festgeld-Treppe</strong> wurden in der URL und im Hash kodiert. Du kannst diesen Link mit deinen Eltern oder auf anderen Geräten teilen:
+      </p>
+
+      <!-- URL Feld -->
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-slate-700">Vollständiger Link (zum Teilen):</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="shareUrlInput" readonly class="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 select-all outline-none">
+          <button onclick="copyShareUrl()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shrink-0 transition flex items-center gap-1.5 shadow-xs">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Kopieren
+          </button>
+        </div>
+      </div>
+
+      <!-- Hash Payload -->
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-slate-700">Reiner Hash-Code:</label>
+        <textarea id="shareHashTextarea" readonly rows="2" class="w-full text-[11px] font-mono bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-600 select-all outline-none resize-none"></textarea>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeModal('saveModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition">
+          Schließen
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Hash Laden -->
+  <div id="loadModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="download" class="w-5 h-5 text-indigo-600"></i>
+          Konfiguration aus Hash laden
+        </h3>
+        <button onclick="closeModal('loadModal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Füge hier einen zuvor gespeicherten Hash-String oder einen vollständigen Link ein, um alle Parameter und die Festgeld-Treppe wiederherzustellen:
+      </p>
+
+      <div class="space-y-1">
+        <label for="hashLoadInput" class="text-xs font-semibold text-slate-700">Hash-Code oder vollständige URL:</label>
+        <textarea id="hashLoadInput" rows="3" placeholder="z. B. #cfg=eyJ2Ijoy... oder https://...#cfg=..." class="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button onclick="closeModal('loadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition">
+          Abbrechen
+        </button>
+        <button onclick="executeLoadFromInput()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-xs">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i> Einstellungen laden
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- JAVASCRIPT: SIMULATIONS-MOTOR & INTERAKTIVITÄT                -->
+  <!-- ============================================================ -->
+  <script>
+    // --- 1. GLOBALE ZUSTÄNDE & INITIALISIERUNG ---
+    let simulationChart = null;
+    let currentSimulationData = [];
+    let isTableOpen = false;
+    let animateNextChart = true;
+    let rafPending = false;
+
+    // Currency Formatter für deutsches Format (z.B. "50.000 €")
+    const currencyFmt = new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+      maximumFractionDigits: 0
+    });
+
+    const percentFmt = new Intl.NumberFormat('de-DE', {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    });
+
+    // Dynamische Festgeld-Treppe Konten
+    let festgeldAccounts = [
+      { id: 'fg-1', name: 'Festgeld 1J', duration: 1, rate: 3.0, share: 33.33 },
+      { id: 'fg-2', name: 'Festgeld 2J', duration: 2, rate: 3.3, share: 33.33 },
+      { id: 'fg-3', name: 'Festgeld 3J', duration: 3, rate: 3.6, share: 33.34 }
+    ];
+
+    // Preset Szenarien
+    const scenarios = {
+      default: {
+        startCapital: 50000,
+        monthlyWithdrawal: 0,
+        accumulationYears: 0,
+        monthlySavings: 0,
+        inflationRate: 2.0,
+        pot1Months: 24,
+        pot2Share: 80,
+        returnPot1: 2.5,
+        returnPot3: 7.0,
+        simulationYears: 30,
+        startAge: 65,
+        festgeld: [
+          { name: 'Festgeld 1J', duration: 1, rate: 3.0, share: 33.33 },
+          { name: 'Festgeld 2J', duration: 2, rate: 3.3, share: 33.33 },
+          { name: 'Festgeld 3J', duration: 3, rate: 3.6, share: 33.34 }
+        ]
+      },
+      rentenstart: {
+        startCapital: 100000,
+        monthlyWithdrawal: 400,
+        accumulationYears: 0,
+        monthlySavings: 0,
+        inflationRate: 2.0,
+        pot1Months: 24,
+        pot2Share: 75,
+        returnPot1: 2.5,
+        returnPot3: 7.0,
+        simulationYears: 30,
+        startAge: 65,
+        festgeld: [
+          { name: 'Festgeld 1J', duration: 1, rate: 3.0, share: 33.33 },
+          { name: 'Festgeld 2J', duration: 2, rate: 3.3, share: 33.33 },
+          { name: 'Festgeld 3J', duration: 3, rate: 3.5, share: 33.34 }
+        ]
+      },
+      komfort: {
+        startCapital: 150000,
+        monthlyWithdrawal: 600,
+        accumulationYears: 0,
+        monthlySavings: 0,
+        inflationRate: 2.0,
+        pot1Months: 36,
+        pot2Share: 70,
+        returnPot1: 2.5,
+        returnPot3: 7.0,
+        simulationYears: 30,
+        startAge: 63,
+        festgeld: [
+          { name: 'Festgeld 1J', duration: 1, rate: 3.0, share: 25 },
+          { name: 'Festgeld 2J', duration: 2, rate: 3.3, share: 25 },
+          { name: 'Festgeld 3J', duration: 3, rate: 3.6, share: 25 },
+          { name: 'Festgeld 4J', duration: 4, rate: 3.8, share: 25 }
+        ]
+      },
+      etfFocus: {
+        startCapital: 100000,
+        monthlyWithdrawal: 350,
+        accumulationYears: 0,
+        monthlySavings: 0,
+        inflationRate: 2.0,
+        pot1Months: 24,
+        pot2Share: 50,
+        returnPot1: 2.5,
+        returnPot3: 7.0,
+        simulationYears: 30,
+        startAge: 65,
+        festgeld: [
+          { name: 'Festgeld 1J', duration: 1, rate: 3.0, share: 50 },
+          { name: 'Festgeld 2J', duration: 2, rate: 3.4, share: 50 }
+        ]
+      }
+    };
+
+    // --- 2. SYNCHRONISATION VON SLIDERN & NUMMERNFELDERN ---
+    function bindSync(sliderId, inputId, callback) {
+      const slider = document.getElementById(sliderId);
+      const input = document.getElementById(inputId);
+
+      if (!slider || !input) return;
+
+      slider.addEventListener('input', (e) => {
+        input.value = e.target.value;
+        if (callback) callback();
+      });
+
+      input.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (!isNaN(val)) {
+          if (val > parseFloat(slider.max)) {
+            if (inputId === 'startCapitalInput') {
+              slider.max = Math.ceil(val / 50000) * 50000;
+            } else {
+              slider.max = val;
+            }
+          }
+          slider.value = val;
+        }
+        if (callback) callback();
+      });
+
+      input.addEventListener('blur', (e) => {
+        let val = parseFloat(e.target.value);
+        const min = parseFloat(input.min !== '' ? input.min : slider.min);
+        const max = parseFloat(input.max !== '' ? input.max : slider.max);
+        if (isNaN(val)) val = min;
+        if (val < min) val = min;
+        if (val > max) val = max;
+        input.value = val;
+        if (val > parseFloat(slider.max)) {
+          if (inputId === 'startCapitalInput') {
+            slider.max = Math.ceil(val / 50000) * 50000;
+          } else {
+            slider.max = val;
+          }
+        }
+        slider.value = val;
+        if (callback) callback();
+      });
+    }
+
+    // Szenario anwenden
+    function applyScenario(name) {
+      const s = scenarios[name];
+      if (!s) return;
+
+      setFieldVal('startCapital', s.startCapital);
+      setFieldVal('monthlyWithdrawal', s.monthlyWithdrawal);
+      setFieldVal('accumulationYears', s.accumulationYears || 0);
+      setFieldVal('monthlySavings', s.monthlySavings || 0);
+      setFieldVal('inflationRate', s.inflationRate);
+      setFieldVal('pot1Months', s.pot1Months);
+      setFieldVal('pot2Share', s.pot2Share);
+      setFieldVal('returnPot1', s.returnPot1);
+      setFieldVal('returnPot3', s.returnPot3);
+      setFieldVal('simulationYears', s.simulationYears);
+      if (s.startAge) document.getElementById('startAge').value = s.startAge;
+
+      if (Array.isArray(s.festgeld)) {
+        festgeldAccounts = s.festgeld.map((fg, i) => ({
+          id: 'fg-' + Date.now() + '-' + i,
+          name: fg.name,
+          duration: fg.duration,
+          rate: fg.rate,
+          share: fg.share
+        }));
+      }
+
+      renderFestgeldList();
+      animateNextChart = true;
+      debouncedRunSimulation();
+      showToast(`Szenario '${name}' geladen`);
+    }
+
+    function setFieldVal(id, val) {
+      const slider = document.getElementById(id);
+      const input = document.getElementById(id + 'Input');
+      if (slider) {
+        if (parseFloat(val) > parseFloat(slider.max)) {
+          if (id === 'startCapital') {
+            slider.max = Math.ceil(parseFloat(val) / 50000) * 50000;
+          } else {
+            slider.max = val;
+          }
+        }
+        slider.value = val;
+      }
+      if (input) input.value = val;
+    }
+
+    // --- EXPERTEN-OPTIONEN VERWALTUNG ---
+    let isExpertOptionsOpen = false;
+
+    function toggleExpertOptions() {
+      const content = document.getElementById('expertOptionsContent');
+      const chevron = document.getElementById('expertOptionsChevron');
+      if (!content || !chevron) return;
+      isExpertOptionsOpen = !isExpertOptionsOpen;
+      if (isExpertOptionsOpen) {
+        content.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+      } else {
+        content.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+    }
+
+    function syncMcPaths(val) {
+      const input = document.getElementById('mcPathsInput');
+      if (!input) return;
+      if (val === 'custom') {
+        input.classList.remove('hidden');
+        input.focus();
+      } else {
+        input.classList.add('hidden');
+        input.value = val;
+        onExpertOptionChange();
+      }
+    }
+
+    function onSeedModeChange() {
+      const mode = document.getElementById('mcSeedModeSelect')?.value;
+      const container = document.getElementById('mcSeedCustomContainer');
+      if (container) {
+        if (mode === 'random') {
+          container.classList.add('hidden');
+        } else {
+          container.classList.remove('hidden');
+        }
+      }
+      onExpertOptionChange();
+    }
+
+    function rerollSeed() {
+      const newSeed = Math.floor(Math.random() * 900000) + 100000;
+      const input = document.getElementById('mcSeedInput');
+      if (input) input.value = newSeed;
+      const modeSelect = document.getElementById('mcSeedModeSelect');
+      if (modeSelect) modeSelect.value = 'fixed';
+      const container = document.getElementById('mcSeedCustomContainer');
+      if (container) container.classList.remove('hidden');
+      onExpertOptionChange();
+      showToast('Neuer Seed gewürfelt: ' + newSeed);
+    }
+
+    function getExpertOptions() {
+      const marketMode = document.getElementById('marketModeSelect')?.value || 'deterministic';
+      const crashPreset = document.getElementById('crashPresetSelect')?.value || 'finanzkrise2008';
+      const customCrashYear = Math.max(1, parseInt(document.getElementById('customCrashYear')?.value) || 1);
+      const customCrashLoss = (parseFloat(document.getElementById('customCrashLoss')?.value) || -35) / 100;
+      const correlateInterest = document.getElementById('correlateInterestToggle')?.checked || false;
+      const mcDistributionModel = document.getElementById('mcDistributionModelSelect')?.value || 'studentT';
+      const volatility = Math.max(0.01, (parseFloat(document.getElementById('volatilityInput')?.value) || 15) / 100);
+      const mcPaths = Math.max(500, Math.min(25000, parseInt(document.getElementById('mcPathsInput')?.value) || 1000));
+      const mcSeedMode = document.getElementById('mcSeedModeSelect')?.value || 'fixed';
+      const mcSeed = parseInt(document.getElementById('mcSeedInput')?.value) || 42;
+      const withdrawalStrategy = document.getElementById('withdrawalStrategySelect')?.value || 'fixedInflation';
+      const withdrawalPercentRate = Math.max(0.001, (parseFloat(document.getElementById('withdrawalPercentRate')?.value) || 4) / 100);
+      const withdrawalFloor = Math.max(0, parseFloat(document.getElementById('withdrawalFloor')?.value) || 0);
+      const withdrawalCap = Math.max(withdrawalFloor, parseFloat(document.getElementById('withdrawalCap')?.value) || 999999);
+      const rebalanceStrategy = document.getElementById('rebalanceStrategySelect')?.value || 'annualCascade';
+
+      return {
+        marketMode,
+        crashPreset,
+        customCrashYear,
+        customCrashLoss,
+        correlateInterest,
+        mcDistributionModel,
+        volatility,
+        mcPaths,
+        mcSeedMode,
+        mcSeed,
+        withdrawalStrategy,
+        withdrawalPercentRate,
+        withdrawalFloor,
+        withdrawalCap,
+        rebalanceStrategy
+      };
+    }
+
+    function onExpertOptionChange() {
+      const opts = getExpertOptions();
+
+      // 1. Markt-Modell Sub-Container umschalten
+      const crashBox = document.getElementById('crashOptionsContainer');
+      const mcBox = document.getElementById('monteCarloOptionsContainer');
+      const customCrashBox = document.getElementById('customCrashFields');
+
+      if (opts.marketMode === 'crash') {
+        crashBox?.classList.remove('hidden');
+        mcBox?.classList.add('hidden');
+        if (opts.crashPreset === 'custom') {
+          customCrashBox?.classList.remove('hidden');
+        } else {
+          customCrashBox?.classList.add('hidden');
+        }
+      } else if (opts.marketMode === 'monteCarlo') {
+        crashBox?.classList.add('hidden');
+        customCrashBox?.classList.add('hidden');
+        mcBox?.classList.remove('hidden');
+      } else {
+        crashBox?.classList.add('hidden');
+        customCrashBox?.classList.add('hidden');
+        mcBox?.classList.add('hidden');
+      }
+
+      // 2. Entnahme-Strategie Sub-Container umschalten
+      const gkBox = document.getElementById('guytonKlingerOptionsContainer');
+      const percBox = document.getElementById('percentPortfolioOptionsContainer');
+      gkBox?.classList.toggle('hidden', opts.withdrawalStrategy !== 'guytonKlinger');
+      percBox?.classList.toggle('hidden', opts.withdrawalStrategy !== 'percentPortfolio');
+
+      // 3. Rebalancing-Strategie Info umschalten
+      const threshBox = document.getElementById('thresholdInfoContainer');
+      const glideBox = document.getElementById('glidepathInfoContainer');
+      threshBox?.classList.toggle('hidden', opts.rebalanceStrategy !== 'threshold');
+      glideBox?.classList.toggle('hidden', opts.rebalanceStrategy !== 'glidepath');
+
+      // 4. Badge im Akkordeon-Header aktualisieren
+      const isCustomized = (
+        opts.marketMode !== 'deterministic' ||
+        opts.withdrawalStrategy !== 'fixedInflation' ||
+        opts.rebalanceStrategy !== 'annualCascade' ||
+        opts.correlateInterest ||
+        opts.mcDistributionModel !== 'studentT'
+      );
+      const badge = document.getElementById('expertActiveBadge');
+      if (badge) {
+        if (isCustomized) {
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      debouncedRunSimulation();
+    }
+
+    function resetExpertOptions() {
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+      };
+      setVal('marketModeSelect', 'deterministic');
+      setVal('crashPresetSelect', 'finanzkrise2008');
+      setVal('customCrashYear', 1);
+      setVal('customCrashLoss', -35);
+      const corrToggle = document.getElementById('correlateInterestToggle');
+      if (corrToggle) corrToggle.checked = false;
+      setVal('mcDistributionModelSelect', 'studentT');
+      setVal('volatilityInput', '15.0');
+      setVal('volatilitySlider', '15.0');
+      setVal('mcPathsSelect', '1000');
+      setVal('mcPathsInput', 1000);
+      document.getElementById('mcPathsInput')?.classList.add('hidden');
+      setVal('mcSeedModeSelect', 'fixed');
+      setVal('mcSeedInput', 42);
+      document.getElementById('mcSeedCustomContainer')?.classList.remove('hidden');
+      setVal('withdrawalStrategySelect', 'fixedInflation');
+      setVal('withdrawalPercentRate', '4.0');
+      setVal('withdrawalFloor', 300);
+      setVal('withdrawalCap', 1500);
+      setVal('rebalanceStrategySelect', 'annualCascade');
+
+      onExpertOptionChange();
+      showToast('Experten-Optionen auf Standard zurückgesetzt');
+    }
+
+    function getInputs() {
+      const startCapital = Math.max(10000, parseFloat(document.getElementById('startCapitalInput').value) || 10000);
+      const monthlyWithdrawal = Math.max(0, Math.min(5000, parseFloat(document.getElementById('monthlyWithdrawalInput').value) || 0));
+      const accumulationYears = Math.min(25, Math.max(0, parseInt(document.getElementById('accumulationYearsInput')?.value) || 0));
+      const monthlySavings = Math.min(5000, Math.max(0, parseFloat(document.getElementById('monthlySavingsInput')?.value) || 0));
+      const inflationRate = Math.max(0, Math.min(10, parseFloat(document.getElementById('inflationRateInput').value) || 0)) / 100;
+      const pot1Months = Math.max(0, Math.min(60, parseInt(document.getElementById('pot1MonthsInput').value) || 0));
+      const pot2Share = Math.min(100, Math.max(0, parseFloat(document.getElementById('pot2ShareInput').value) || 0)) / 100;
+      const returnPot1 = Math.max(0, Math.min(10, parseFloat(document.getElementById('returnPot1Input').value) || 0)) / 100;
+      const returnPot3 = Math.max(-5, Math.min(15, parseFloat(document.getElementById('returnPot3Input').value) || 0)) / 100;
+      const simulationYears = Math.min(50, Math.max(accumulationYears + 1, parseInt(document.getElementById('simulationYearsInput').value) || 30));
+      const startAge = Math.min(100, Math.max(40, parseInt(document.getElementById('startAge').value) || 65));
+      const expert = getExpertOptions();
+
+      return {
+        startCapital,
+        monthlyWithdrawal,
+        accumulationYears,
+        monthlySavings,
+        inflationRate,
+        pot1Months,
+        pot2Share,
+        returnPot1,
+        returnPot3,
+        simulationYears,
+        startAge,
+        expert
+      };
+    }
+
+    // --- FESTGELD-TREPPE VERWALTUNG ---
+    function getWeightedFestgeldRate() {
+      if (!festgeldAccounts || festgeldAccounts.length === 0) return 0;
+      let totalWeight = 0;
+      let weightedSum = 0;
+      festgeldAccounts.forEach(acc => {
+        const share = Math.max(0, parseFloat(acc.share) || 0);
+        const rate = parseFloat(acc.rate) || 0;
+        totalWeight += share;
+        weightedSum += share * rate;
+      });
+      return totalWeight > 0 ? (weightedSum / totalWeight) : 0;
+    }
+
+    function renderFestgeldList() {
+      const listContainer = document.getElementById('festgeldAccountsList');
+      if (!listContainer) return;
+      listContainer.innerHTML = '';
+
+      const countBadge = document.getElementById('fgCountBadge');
+      if (countBadge) countBadge.textContent = festgeldAccounts.length;
+
+      const params = getInputs();
+      const initialPot1 = Math.min(params.startCapital, params.pot1Months * params.monthlyWithdrawal);
+      const remainingCapital = Math.max(0, params.startCapital - initialPot1);
+      const initialPot2 = remainingCapital * params.pot2Share;
+
+      const totalShareRaw = festgeldAccounts.reduce((sum, a) => sum + (parseFloat(a.share) || 0), 0);
+      const totalSharePct = Math.round(totalShareRaw * 10) / 10;
+      let totalShare = totalShareRaw <= 0 ? 1 : totalShareRaw;
+
+      // Badge für Summe der Anteile und Topf-Abdeckung aktualisieren
+      const isFullCoverage = Math.abs(totalSharePct - 100) < 0.1;
+      const shareSumBadge = document.getElementById('fgShareSumBadge');
+      if (shareSumBadge) {
+        shareSumBadge.textContent = `${totalSharePct}%`;
+        if (isFullCoverage) {
+          shareSumBadge.className = 'text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded';
+          shareSumBadge.title = 'Summe der Anteile: 100%';
+        } else {
+          shareSumBadge.className = 'text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded';
+          shareSumBadge.title = `Achtung: Summe ist ${totalSharePct}% (sollte 100% sein)`;
+        }
+      }
+
+      const potBadge = document.getElementById('potCoverageBadge');
+      if (potBadge) {
+        if (isFullCoverage) {
+          potBadge.textContent = '100% Gedeckt';
+          potBadge.className = 'text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200';
+          potBadge.title = 'Topf-Aufteilung und Festgeld-Anteile sind vollständig zu 100% aufgeteilt';
+        } else {
+          potBadge.textContent = `${totalSharePct}% Aufgeteilt`;
+          potBadge.className = 'text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300';
+          potBadge.title = `Achtung: Festgeld-Anteile ergeben aktuell ${totalSharePct}% statt 100%`;
+        }
+      }
+
+      festgeldAccounts.forEach((acc) => {
+        const itemShare = parseFloat(acc.share) || 0;
+        const approxAmount = Math.round(initialPot2 * (itemShare / totalShare));
+
+        const card = document.createElement('div');
+        card.className = 'bg-white p-2 rounded-lg border border-emerald-200/80 shadow-2xs space-y-1.5 transition';
+        card.dataset.accountId = acc.id;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-1">
+            <div class="flex items-center gap-1.5 flex-1 min-w-0">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+              <input type="text" data-field="name" value="${escapeHtml(acc.name)}"
+                class="font-semibold text-xs text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-emerald-500 px-1 py-0.5 focus:bg-white rounded outline-none transition w-28 truncate" title="Konto-Bezeichnung">
+              <span class="text-[10px] text-slate-400 font-mono font-medium truncate">${currencyFmt.format(approxAmount)}</span>
+            </div>
+            ${festgeldAccounts.length > 1 ? `
+              <button type="button" data-action="delete" class="text-slate-400 hover:text-rose-600 p-1 rounded transition" title="Dieses Festgeldkonto entfernen">
+                <svg class="w-3.5 h-3.5 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            ` : ''}
+          </div>
+          <div class="grid grid-cols-3 gap-1.5 text-[11px]">
+            <div>
+              <label class="text-[10px] text-slate-500 block">Laufzeit</label>
+              <div class="flex items-center gap-0.5">
+                <input type="number" data-field="duration" min="1" max="15" step="1" value="${acc.duration}"
+                  class="w-full text-right font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-xs focus:ring-1 focus:ring-emerald-500">
+                <span class="text-slate-400 text-[10px]">J.</span>
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500 block">Zins p.a.</label>
+              <div class="flex items-center gap-0.5">
+                <input type="number" data-field="rate" min="0" max="15" step="0.1" value="${acc.rate}"
+                  class="w-full text-right font-bold text-emerald-700 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-xs focus:ring-1 focus:ring-emerald-500">
+                <span class="text-slate-400 text-[10px]">%</span>
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500 block">Anteil Topf 2</label>
+              <div class="flex items-center gap-0.5">
+                <input type="number" data-field="share" min="1" max="100" step="0.5" value="${acc.share}"
+                  class="w-full text-right font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-xs focus:ring-1 focus:ring-emerald-500">
+                <span class="text-slate-400 text-[10px]">%</span>
+              </div>
+            </div>
+          </div>
+        `;
+        listContainer.appendChild(card);
+      });
+
+      // Zins-Anzeigen aktualisieren
+      const avgRate = getWeightedFestgeldRate();
+      const avgRateFormatted = `Ø ${avgRate.toFixed(1).replace('.', ',')} % p.a.`;
+      
+      const summaryElem = document.getElementById('fgAvgRateSummary');
+      if (summaryElem) summaryElem.textContent = avgRateFormatted;
+      
+      const displayElem = document.getElementById('returnPot2Display');
+      if (displayElem) displayElem.textContent = `${avgRate.toFixed(1).replace('.', ',')} % p.a.`;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function addFestgeldAccount() {
+      const maxDur = festgeldAccounts.reduce((max, a) => Math.max(max, parseInt(a.duration) || 1), 0);
+      const newDur = maxDur + 1;
+      const newRate = +(3.0 + (newDur * 0.2)).toFixed(1);
+      
+      festgeldAccounts.push({
+        id: 'fg-' + Date.now(),
+        name: `Festgeld ${newDur}J`,
+        duration: newDur,
+        rate: newRate,
+        share: 0
+      });
+
+      distributeFestgeldSharesEvenly();
+      showToast(`Konto '${newDur}J' hinzugefügt`);
+    }
+
+    function removeFestgeldAccount(id) {
+      if (festgeldAccounts.length <= 1) return;
+      festgeldAccounts = festgeldAccounts.filter(a => a.id !== id);
+      distributeFestgeldSharesEvenly();
+    }
+
+    function distributeFestgeldSharesEvenly() {
+      if (!festgeldAccounts.length) return;
+      const n = festgeldAccounts.length;
+      const base = +(100 / n).toFixed(1);
+      let sum = 0;
+      festgeldAccounts.forEach((a, i) => {
+        if (i === n - 1) {
+          a.share = +(100 - sum).toFixed(1);
+        } else {
+          a.share = base;
+          sum += base;
+        }
+      });
+      renderFestgeldList();
+      debouncedRunSimulation();
+    }
+
+    function updateFestgeldField(id, field, value) {
+      const acc = festgeldAccounts.find(a => a.id === id);
+      if (!acc) return;
+
+      if (field === 'name') {
+        acc.name = value.trim() || 'Festgeld';
+      } else if (field === 'duration') {
+        acc.duration = Math.max(1, parseInt(value) || 1);
+      } else if (field === 'rate') {
+        acc.rate = Math.max(0, parseFloat(value) || 0);
+      } else if (field === 'share') {
+        const newShare = Math.max(0, parseFloat(value) || 0);
+        const oldShare = acc.share;
+        acc.share = newShare;
+        
+        if (festgeldAccounts.length > 1) {
+          const diff = newShare - oldShare;
+          const others = festgeldAccounts.filter(a => a.id !== id);
+          const othersTotal = others.reduce((sum, a) => sum + a.share, 0);
+          
+          if (othersTotal > 0) {
+            others.forEach(a => {
+              a.share = Math.max(0, a.share - (a.share / othersTotal) * diff);
+              a.share = +(a.share).toFixed(1);
+            });
+          } else {
+            const distribute = Math.max(0, (100 - newShare) / others.length);
+            others.forEach(a => a.share = +(distribute).toFixed(1));
+          }
+          
+          const currentTotal = festgeldAccounts.reduce((sum, a) => sum + a.share, 0);
+          if (Math.abs(currentTotal - 100) > 0.1 && others.length > 0) {
+              others[others.length - 1].share += +(100 - currentTotal).toFixed(1);
+          }
+        }
+      }
+
+      renderFestgeldList();
+      debouncedRunSimulation();
+    }
+
+    function initFestgeldListeners() {
+      const listContainer = document.getElementById('festgeldAccountsList');
+      if (!listContainer) return;
+      
+      listContainer.addEventListener('change', (e) => {
+        const input = e.target;
+        const card = input.closest('[data-account-id]');
+        if (card && input.dataset.field) {
+          updateFestgeldField(card.dataset.accountId, input.dataset.field, input.value);
+        }
+      });
+      
+      listContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action="delete"]');
+        if (btn) {
+          const card = btn.closest('[data-account-id]');
+          if (card) {
+            removeFestgeldAccount(card.dataset.accountId);
+          }
+        }
+      });
+    }
+
+    // --- 3. DIE MATHEMATISCHE SIMULATIONS-LOGIK ---
+
+    // Ein einzelner Pfad-Durchlauf über N Jahre mit optionalen dynamischen Szenario-Kurven
+    function simulateSinglePath(params, etfYieldFn, expertOpts, scenarioOverrides = {}) {
+      const {
+        startCapital,
+        monthlyWithdrawal,
+        inflationRate,
+        pot1Months,
+        pot2Share,
+        returnPot1,
+        simulationYears,
+        startAge
+      } = params;
+
+      const opts = expertOpts || {
+        withdrawalStrategy: 'fixedInflation',
+        withdrawalPercentRate: 0.04,
+        withdrawalFloor: 0,
+        withdrawalCap: 999999,
+        rebalanceStrategy: 'annualCascade'
+      };
+
+      const getInflationForYear = typeof scenarioOverrides.getInflationForYear === 'function'
+        ? scenarioOverrides.getInflationForYear
+        : (() => inflationRate);
+
+      const getPot1ReturnForYear = typeof scenarioOverrides.getPot1ReturnForYear === 'function'
+        ? scenarioOverrides.getPot1ReturnForYear
+        : (() => returnPot1);
+
+      const getFestgeldRateForYear = typeof scenarioOverrides.getFestgeldRateForYear === 'function'
+        ? scenarioOverrides.getFestgeldRateForYear
+        : ((y, baseRate) => baseRate);
+
+      const accumulationYears = params.accumulationYears || 0;
+      const monthlySavings = params.monthlySavings || 0;
+      let capitalAtRetirementStart = null;
+
+      // 1. Initiale Topf-Aufteilung (in Jahr 0):
+      // Das Startkapital wird sofort aufgeteilt. So ist das Geld ab Tag 1 geschützt.
+      let initialPot1 = Math.min(startCapital, pot1Months * monthlyWithdrawal);
+      let remainingCapital = Math.max(0, startCapital - initialPot1);
+      let initialPot2 = remainingCapital * pot2Share;
+      let initialPot3 = remainingCapital - initialPot2;
+
+      // Konten der Festgeld-Treppe initialisieren
+      let totalFgShare = festgeldAccounts.reduce((sum, a) => sum + (parseFloat(a.share) || 0), 0);
+      if (totalFgShare <= 0) totalFgShare = 1;
+
+      let activeFgAccounts = festgeldAccounts.map(a => {
+        const dur = Math.max(1, parseInt(a.duration) || 1);
+        const share = Math.max(0, parseFloat(a.share) || 0);
+        const rate = (parseFloat(a.rate) || 0) / 100;
+        const initialBalance = initialPot2 * (share / totalFgShare);
+        return {
+          id: a.id,
+          name: a.name,
+          duration: dur,
+          baseRate: rate,
+          rate: rate,
+          balance: initialBalance,
+          remainingYears: dur
+        };
+      });
+
+      let pot1 = initialPot1;
+      let pot3 = initialPot3;
+
+      let cumulativeWithdrawn = 0;
+      let bankruptYear = null;
+      let cumulativeInflation = 1.0;
+
+      const history = [];
+
+      function getPot2Total() {
+        return activeFgAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+      }
+
+      // Guyton-Klinger Vorbereitung
+      let initialAnnualWithdrawal = monthlyWithdrawal * 12;
+      let initialWithdrawalRate = startCapital > 0 ? (initialAnnualWithdrawal / startCapital) : 0.04;
+      let gkFloor = initialAnnualWithdrawal * 0.8;
+      let gkCap = initialAnnualWithdrawal * 1.5;
+      let gkPreviousWithdrawal = initialAnnualWithdrawal;
+
+      // Startzustand (Jahr 0)
+      history.push({
+        year: 0,
+        age: startAge,
+        annualWithdrawal: 0,
+        actualWithdrawal: 0,
+        cumulativeWithdrawn: 0,
+        pot1: pot1,
+        pot2: getPot2Total(),
+        pot3: pot3,
+        totalCapital: pot1 + getPot2Total() + pot3,
+        event: 'Start'
+      });
+
+      // Schleife Jahr 1 bis N
+      for (let y = 1; y <= simulationYears; y++) {
+        const currentAge = startAge + y;
+        let event = 'Normal';
+        let gkTriggerNote = '';
+        const currentYearInflation = getInflationForYear(y);
+        const isAccumulating = y <= accumulationYears;
+        const isFirstWithdrawalYear = (y === accumulationYears + 1);
+
+        if (bankruptYear !== null) {
+          history.push({
+            year: y,
+            age: currentAge,
+            annualWithdrawal: 0,
+            actualWithdrawal: 0,
+            cumulativeWithdrawn: cumulativeWithdrawn,
+            pot1: 0,
+            pot2: 0,
+            pot3: 0,
+            totalCapital: 0,
+            event: 'Kapital aufgebraucht'
+          });
+          continue;
+        }
+
+        // Countdown für Festgeld-Laufzeiten verringern
+        activeFgAccounts.forEach(acc => {
+          acc.remainingYears -= 1;
+        });
+
+        // ==========================================
+        // 1. ANSPARPHASE & 2. ENTNAHMEPHASE (Unified)
+        // ==========================================
+        
+        if (isAccumulating) {
+          const annualSavings = monthlySavings * 12;
+          if (annualSavings > 0) {
+            pot3 += annualSavings;
+            event = `Ansparphase (+${currencyFmt.format(annualSavings)})`;
+          } else {
+            event = 'Ansparphase (Zinseszins)';
+          }
+          if (y === accumulationYears) {
+            // Save state right before retirement begins
+            capitalAtRetirementStart = pot1 + getPot2Total() + pot3;
+          }
+        }
+
+        // A. Entnahmehöhe nach gewählter Strategie berechnen
+        let annualWithdrawal = 0;
+        gkTriggerNote = '';
+        const currentPot2Before = getPot2Total();
+        const totalCapitalBeforeWithdrawal = pot1 + currentPot2Before + pot3;
+
+        if (isAccumulating) {
+          annualWithdrawal = 0;
+        } else {
+          if (opts.withdrawalStrategy === 'guytonKlinger') {
+            if (isFirstWithdrawalYear) {
+              // Guardrails am tatsächlichen Beginn der Entnahme kalibrieren
+              initialAnnualWithdrawal = (monthlyWithdrawal * cumulativeInflation) * 12;
+              initialWithdrawalRate = totalCapitalBeforeWithdrawal > 0 ? (initialAnnualWithdrawal / totalCapitalBeforeWithdrawal) : 0.04;
+              gkFloor = initialAnnualWithdrawal * 0.8;
+              gkCap = initialAnnualWithdrawal * 1.5;
+              gkPreviousWithdrawal = initialAnnualWithdrawal;
+              annualWithdrawal = initialAnnualWithdrawal;
+            } else {
+              if (totalCapitalBeforeWithdrawal <= 0) {
+                annualWithdrawal = 0;
+              } else {
+                const previousYearInflation = y > 1 ? getInflationForYear(y - 1) : 0;
+                const targetWithInflation = gkPreviousWithdrawal * (1 + previousYearInflation);
+                const currentWithdrawalRate = targetWithInflation / totalCapitalBeforeWithdrawal;
+
+                // Kapitalerhalt: Wenn Entnahmerate > 35% über Initialwert -> 10% Kürzung
+                if (currentWithdrawalRate > initialWithdrawalRate * 1.35) {
+                  annualWithdrawal = gkPreviousWithdrawal * 0.90;
+                  gkTriggerNote = 'GK: Kürzung (-10%)';
+                // Wenn Entnahmerate > 20% über Initialwert -> Inflationsanpassung einfrieren
+                } else if (currentWithdrawalRate > initialWithdrawalRate * 1.20) {
+                  annualWithdrawal = gkPreviousWithdrawal;
+                  gkTriggerNote = 'GK: Inflationsstopp';
+                // Wohlstands-Regel: Wenn Entnahmerate < 20% unter Initialwert -> +10% Erhöhung
+                } else if (currentWithdrawalRate < initialWithdrawalRate * 0.80) {
+                  annualWithdrawal = targetWithInflation * 1.10;
+                  gkTriggerNote = 'GK: Bonus (+10%)';
+                } else {
+                  annualWithdrawal = targetWithInflation;
+                }
+
+                // Floor & Cap Begrenzung
+                annualWithdrawal = Math.max(gkFloor, Math.min(gkCap, annualWithdrawal));
+              }
+            }
+            gkPreviousWithdrawal = annualWithdrawal;
+
+          } else if (opts.withdrawalStrategy === 'percentPortfolio') {
+            if (totalCapitalBeforeWithdrawal <= 0) {
+              annualWithdrawal = 0;
+            } else {
+              const rawAnnual = totalCapitalBeforeWithdrawal * opts.withdrawalPercentRate;
+              const minAnnual = opts.withdrawalFloor * 12;
+              const maxAnnual = opts.withdrawalCap * 12;
+              annualWithdrawal = Math.max(minAnnual, Math.min(maxAnnual, rawAnnual));
+            }
+
+          } else {
+            // Standard: feste Entnahme + kumulierte dynamische Inflation
+            annualWithdrawal = (monthlyWithdrawal * cumulativeInflation) * 12;
+          }
+        }
+
+        // Kumulierte Inflation für Folgejahre fortschreiben
+        cumulativeInflation *= (1 + currentYearInflation);
+
+        let neededWithdrawal = annualWithdrawal;
+        let actualWithdrawnThisYear = 0;
+
+        // B. Entnahme abziehen nach Kaskaden-Prinzip
+        // 1. Topf 1 (Tagesgeld)
+        const pot1Start = pot1;
+        const w1 = Math.min(pot1, neededWithdrawal);
+        pot1 -= w1;
+        neededWithdrawal -= w1;
+        actualWithdrawnThisYear += w1;
+
+        // 2. Reicht Topf 1 nicht: Rest aus Topf 2 (Festgeld-Treppe)
+        let w2 = 0;
+        if (neededWithdrawal > 0.001) {
+          const sortedFg = [...activeFgAccounts].sort((a, b) => a.remainingYears - b.remainingYears);
+          for (let acc of sortedFg) {
+            if (acc.balance > 0 && neededWithdrawal > 0.001) {
+              const take = Math.min(acc.balance, neededWithdrawal);
+              if (acc.remainingYears > 0) {
+                acc.brokenEarly = true;
+              }
+              acc.balance -= take;
+              neededWithdrawal -= take;
+              actualWithdrawnThisYear += take;
+              w2 += take;
+            }
+          }
+          if (w2 > 0) event = 'Aus Festgeld entnommen';
+        }
+
+        // 3. Reicht Topf 2 nicht: Rest aus Topf 3 (ETF)
+        let w3 = 0;
+        if (neededWithdrawal > 0.001) {
+          w3 = Math.min(pot3, neededWithdrawal);
+          pot3 -= w3;
+          neededWithdrawal -= w3;
+          actualWithdrawnThisYear += w3;
+          event = 'Aus ETF entnommen';
+        }
+
+        cumulativeWithdrawn += actualWithdrawnThisYear;
+        const shortfall = neededWithdrawal > 0.01;
+
+        // C. Verzinsung
+        // Topf 1: Verzinsung auf durchschnittlichen Bestand
+        let pot1Avg = 0;
+        if (annualWithdrawal > 0) {
+          if (w1 >= annualWithdrawal) {
+            pot1Avg = Math.max(0, pot1Start - 0.5 * w1);
+          } else {
+            pot1Avg = (w1 * w1) / (2 * annualWithdrawal);
+          }
+        } else {
+          pot1Avg = pot1Start;
+        }
+        const currentReturnPot1 = getPot1ReturnForYear(y);
+        const interestPot1 = pot1Avg * currentReturnPot1;
+        pot1 = Math.max(0, pot1 + interestPot1);
+
+        // Topf 2: Jedes Festgeldkonto verzinst sein Restguthaben
+        activeFgAccounts.forEach(acc => {
+          if (acc.balance > 0) {
+            const effectiveRate = acc.brokenEarly ? acc.rate * 0.5 : acc.rate;
+            acc.balance = acc.balance * (1 + effectiveRate);
+          }
+          acc.brokenEarly = false;
+        });
+
+        // Topf 3: ETF-Rendite für Jahr y
+        const r3 = etfYieldFn(y, currentAge);
+        pot3 = Math.max(0, pot3 * (1 + r3));
+
+        // D. Rebalancing (Der Zins-Motor am Jahresende)
+        const nextYearInflation = getInflationForYear(y + 1);
+        let nextMonthlyWithdrawal;
+        if (annualWithdrawal > 0) {
+            nextMonthlyWithdrawal = (annualWithdrawal / 12) * (1 + nextYearInflation);
+        } else {
+            // In der Ansparphase muss die aufgelaufene Inflation für das Ziel-Niveau berücksichtigt werden
+            nextMonthlyWithdrawal = (monthlyWithdrawal * cumulativeInflation) * (1 + nextYearInflation);
+        }
+        const targetPot1 = pot1Months * nextMonthlyWithdrawal;
+        let rebalanceEventNote = '';
+
+        if (pot1 < targetPot1) {
+          let deficit = targetPot1 - pot1;
+          let rebalanceFromPot2 = 0;
+          let rebalanceFromPot3 = 0;
+
+          // Zuerst aus fälligen / kürzesten Festgeldkonten auffüllen
+          const sortedFgRebalance = [...activeFgAccounts].sort((a, b) => a.remainingYears - b.remainingYears);
+          for (let acc of sortedFgRebalance) {
+            if (acc.balance > 0 && deficit > 0.001) {
+              // In der Ansparphase keine Festgelder vorzeitig brechen (nur fällige verwenden)
+              if (isAccumulating && acc.remainingYears > 0) continue;
+
+              if (acc.remainingYears > 0) {
+                // Apply penalty retrospectively by clawing back half of this year's interest on the remaining balance
+                acc.balance -= (acc.balance * (acc.rate * 0.5));
+              }
+              const take = Math.min(acc.balance, deficit);
+              acc.balance -= take;
+              pot1 += take;
+              deficit -= take;
+              rebalanceFromPot2 += take;
+            }
+          }
+
+          // Rest-Defizit aus Topf 3 (ETF) unter Berücksichtigung der Rebalancing-Regel
+          if (deficit > 0.001 && pot3 > 0) {
+            if (opts.rebalanceStrategy === 'threshold' && r3 < 0) {
+              // Schwellenwert: Keine ETF-Verkäufe in Verlustjahren!
+              rebalanceEventNote = 'Verkaufsstopp Topf 3 (Baisse)';
+            } else {
+              rebalanceFromPot3 = Math.min(pot3, deficit);
+              pot3 -= rebalanceFromPot3;
+              pot1 += rebalanceFromPot3;
+              deficit -= rebalanceFromPot3;
+              rebalanceEventNote = 'Rebalancing (ETF-Ernte)';
+            }
+          } else if (rebalanceFromPot2 > 0) {
+            rebalanceEventNote = 'Rebalanced aus Festgeld-Treppe';
+          }
+        }
+
+        // Gleitpfad: Ab Alter 70 sinkt ETF-Anteil um 0,5% p.a. zugunsten von Topf 2
+        let glidepathNote = '';
+        if (opts.rebalanceStrategy === 'glidepath' && currentAge >= 70 && pot3 > 0) {
+          const totalNow = pot1 + getPot2Total() + pot3;
+          const shiftAmount = Math.min(pot3, totalNow * 0.005);
+          if (shiftAmount > 1) {
+            pot3 -= shiftAmount;
+            const longestFg = [...activeFgAccounts].sort((a, b) => b.duration - a.duration)[0];
+            if (longestFg) {
+              longestFg.balance += shiftAmount;
+              glidepathNote = 'Gleitpfad (-0,5% ETF)';
+            }
+          }
+        }
+
+        // Fällige Festgelder rollieren für ihre volle Laufzeit weiter (mit dynamischem Satz)
+        activeFgAccounts.forEach(acc => {
+          if (acc.remainingYears <= 0) {
+            acc.remainingYears = acc.duration;
+            acc.rate = getFestgeldRateForYear(y, acc.baseRate);
+          }
+        });
+
+        // E. Abbruchbedingung / Bankrott
+        let currentPot2 = getPot2Total();
+        let totalCapital = pot1 + currentPot2 + pot3;
+        if (totalCapital <= 0.5 || shortfall) {
+          if (bankruptYear === null) {
+            bankruptYear = y;
+            event = 'Bankrott (Kapital erschöpft)';
+          }
+          pot1 = 0;
+          activeFgAccounts.forEach(a => a.balance = 0);
+          pot3 = 0;
+          totalCapital = 0;
+        } else {
+          // Salientes Ereignis für Tabellenanzeige priorisieren
+          if (accumulationYears > 0 && isFirstWithdrawalYear && annualWithdrawal > 0) {
+            event = 'Entnahmebeginn';
+          } else if (rebalanceEventNote === 'Verkaufsstopp Topf 3 (Baisse)') {
+            event = r3 <= -0.15 ? `Crash (${(r3 * 100).toFixed(0)}%) • Verkaufsstopp Topf 3` : 'Verkaufsstopp Topf 3 (Baisse)';
+          } else if (r3 <= -0.15) {
+            event = isAccumulating ? `Crash (${(r3 * 100).toFixed(0)}%)` : `Crash (${(r3 * 100).toFixed(0)}%) • Puffer aktiv`;
+          } else if (gkTriggerNote) {
+            event = gkTriggerNote;
+          } else if (rebalanceEventNote) {
+            event = isAccumulating ? `Ansparphase • ${rebalanceEventNote}` : rebalanceEventNote;
+          } else if (glidepathNote) {
+            event = glidepathNote;
+          }
+        }
+
+        history.push({
+          year: y,
+          age: currentAge,
+          annualWithdrawal: annualWithdrawal,
+          actualWithdrawal: actualWithdrawnThisYear,
+          cumulativeWithdrawn: cumulativeWithdrawn,
+          pot1: Math.max(0, pot1),
+          pot2: Math.max(0, getPot2Total()),
+          pot3: Math.max(0, pot3),
+          totalCapital: Math.max(0, totalCapital),
+          event: event
+        });
+      }
+
+      return {
+        params,
+        initialPot1,
+        initialPot2,
+        initialPot3,
+        history,
+        bankruptYear,
+        capitalAtRetirementStart,
+        finalTotal: history[history.length - 1].totalCapital,
+        totalWithdrawn: cumulativeWithdrawn
+      };
+    }
+
+    // Schneller deterministischer Zufallszahlengenerator (Mulberry32 PRNG mit Seed)
+    function createMulberry32(seed = 42) {
+      let a = seed | 0;
+      return function() {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t >>> 0) / 4294967296);
+      };
+    }
+
+    // Box-Muller Normalverteilungs-Zufallsgenerator für Monte-Carlo
+    function sampleStandardNormal(rng) {
+      let u = 0, v = 0;
+      while (u === 0) u = rng ? rng() : Math.random();
+      while (v === 0) v = rng ? rng() : Math.random();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    // Student-t Verteilungs-Zufallsgenerator (Fat Tails, ν=5, Kurtosis=9, normiert auf Einheitsvarianz 1)
+    function sampleStudentT5(rng) {
+      const z = sampleStandardNormal(rng);
+      const z1 = sampleStandardNormal(rng);
+      const z2 = sampleStandardNormal(rng);
+      const z3 = sampleStandardNormal(rng);
+      const z4 = sampleStandardNormal(rng);
+      const z5 = sampleStandardNormal(rng);
+      const v = z1 * z1 + z2 * z2 + z3 * z3 + z4 * z4 + z5 * z5;
+      return z * Math.sqrt(3.0 / Math.max(1e-9, v));
+    }
+
+    function simulate(params) {
+      const expert = params.expert || { marketMode: 'deterministic' };
+      const mode = expert.marketMode;
+
+      // 1. DETERMINISTISCH (Standard)
+      if (mode === 'deterministic') {
+        const etfYieldFn = () => params.returnPot3;
+        const result = simulateSinglePath(params, etfYieldFn, expert);
+        return {
+          ...result,
+          isMonteCarlo: false,
+          isCrash: false
+        };
+      }
+
+      // 2. HISTORISCHES CRASH-SZENARIO & SYSTEMISCHE KRISEN
+      if (mode === 'crash') {
+        const preset = expert.crashPreset;
+        let crashBannerTitle = 'Historisches Crash-Szenario aktiv';
+        let crashBannerSub = 'Topf 1 & Festgeld puffern den Börsenabsturz ab';
+
+        const overrides = {};
+
+        if (preset === 'finanzkrise2008') {
+          crashBannerTitle = 'Finanzkrise 2008 aktiv (-38% in Jahr 1)';
+          crashBannerSub = 'Pufferwirkung: Topf 1 & 2 tragen die Entnahmen durch das Kurstal';
+        } else if (preset === 'dotcom2000') {
+          crashBannerTitle = 'Dot-Com-Crash aktiv (-15%, -20%, -25% in Folge)';
+          crashBannerSub = 'Stresstest: Mehrjähriger Bärenmarkt wird durch die Festgeld-Treppe überbrückt';
+        } else if (preset === 'earlyShock') {
+          crashBannerTitle = 'Früher Marktschock aktiv (-30% in J1, -15% in J2)';
+          crashBannerSub = 'Sequence-of-Returns-Schutz: Kein Anteilsverkauf zu Tiefstkursen';
+        } else if (preset === 'japanStag') {
+          crashBannerTitle = 'Japan-Szenario aktiv (Verlorene Dekade: 15 Jahre Stagnation)';
+          crashBannerSub = 'Stresstest: Ausbleibender Rebound testet, ob die Festgeld-Treppe lange genug durchhält';
+        } else if (preset === 'stagflation1970') {
+          crashBannerTitle = 'Stagflation der 1970er aktiv (Inflation bis 11% & Baisse)';
+          crashBannerSub = 'Gefährlichste Konstellation: Hohe Inflation treibt Entnahmen, während das ETF-Depot schrumpft';
+        } else if (preset === 'systemicCrisis') {
+          crashBannerTitle = 'Systemkrise mit Zinssturz aktiv (-45% Crash & Zinsen auf 0,25%)';
+          crashBannerSub = 'Realitätsnah: Nach Markteinbruch senken Zentralbanken die Zinsen; Festgeld-Neuverträge bringen nur 0,5%';
+        } else if (preset === 'custom') {
+          crashBannerTitle = `Benutzerdefinierter Schock (${(expert.customCrashLoss * 100).toFixed(0)}% in Jahr ${expert.customCrashYear})`;
+          crashBannerSub = 'Individueller Stresstest der 3-Töpfe-Strategie';
+        }
+
+        if (params.accumulationYears > 0) {
+           crashBannerSub += ` (Test schlägt exakt zum Renteneintritt nach ${params.accumulationYears} Jahren Ansparen ein)`;
+        }
+
+        // A. ETF-Renditen für die Krisenjahre
+        const etfYieldFn = (y) => {
+          const ry = y - (params.accumulationYears || 0);
+          if (ry <= 0) return params.returnPot3;
+          
+          if (preset === 'finanzkrise2008') {
+            if (ry === 1) return -0.38;
+            if (ry === 2) return 0.26;
+            if (ry === 3) return 0.15;
+            if (ry === 4) return 0.12;
+            return params.returnPot3;
+          } else if (preset === 'dotcom2000') {
+            if (ry === 1) return -0.15;
+            if (ry === 2) return -0.20;
+            if (ry === 3) return -0.25;
+            if (ry === 4) return 0.25;
+            if (ry === 5) return 0.12;
+            return params.returnPot3;
+          } else if (preset === 'earlyShock') {
+            if (ry === 1) return -0.30;
+            if (ry === 2) return -0.15;
+            if (ry === 3) return 0.10;
+            return params.returnPot3;
+          } else if (preset === 'japanStag') {
+            if (ry === 1) return -0.25;
+            if (ry === 2) return -0.18;
+            if (ry === 3) return 0.06;
+            if (ry === 4) return -0.12;
+            if (ry === 5) return -0.05;
+            if (ry >= 6 && ry <= 15) return 0.01; // 1% p.a. Stagnation
+            return params.returnPot3;
+          } else if (preset === 'stagflation1970') {
+            if (ry === 1) return -0.16;
+            if (ry === 2) return -0.14;
+            if (ry === 3) return 0.04;
+            if (ry === 4) return -0.10;
+            if (ry === 5) return 0.03;
+            return params.returnPot3;
+          } else if (preset === 'systemicCrisis') {
+            if (ry === 1) return -0.32;
+            if (ry === 2) return -0.22;
+            if (ry === 3) return 0.10;
+            return params.returnPot3;
+          } else if (preset === 'custom') {
+            if (ry === expert.customCrashYear) return expert.customCrashLoss;
+            if (ry === expert.customCrashYear + 1) return 0.15;
+            return params.returnPot3;
+          }
+          return params.returnPot3;
+        };
+
+        // B. Dynamische Inflation für Stagflation & Japan
+        if (preset === 'stagflation1970') {
+          overrides.getInflationForYear = (y) => {
+            const ry = y - (params.accumulationYears || 0);
+            if (ry <= 0) return params.inflationRate;
+            if (ry === 1) return 0.08;
+            if (ry === 2) return 0.105;
+            if (ry === 3) return 0.11;
+            if (ry === 4) return 0.085;
+            if (ry === 5) return 0.06;
+            return params.inflationRate;
+          };
+        } else if (preset === 'japanStag') {
+          overrides.getInflationForYear = (y) => {
+            const ry = y - (params.accumulationYears || 0);
+            if (ry <= 0) return params.inflationRate;
+            if (ry <= 15) return 0.005; // 0,5 % Deflations-/Niedrigstinflationsphase
+            return params.inflationRate;
+          };
+        }
+
+        // C. Zinssturz bei systemischer Krise oder wenn Zins-Kopplung aktiv ist
+        const shouldCorrelateInterest = preset === 'systemicCrisis' || expert.correlateInterest;
+        if (shouldCorrelateInterest) {
+          let crisisStartYear = 2;
+          if (preset === 'custom') {
+            crisisStartYear = expert.customCrashYear + 1;
+          }
+          const crisisEndYear = crisisStartYear + 5; // 6 Jahre Nullzinsumfeld
+
+          overrides.getPot1ReturnForYear = (y) => {
+            const ry = y - (params.accumulationYears || 0);
+            if (ry >= crisisStartYear && ry <= crisisEndYear) {
+              return 0.0025; // Tagesgeld fällt auf 0,25 %
+            }
+            return params.returnPot1;
+          };
+
+          overrides.getFestgeldRateForYear = (y, baseRate) => {
+            const ry = y - (params.accumulationYears || 0);
+            if (ry >= crisisStartYear && ry <= crisisEndYear) {
+              return Math.min(baseRate * 0.25, 0.005); // Neu rollierte Tranchen fallen auf max. 0,5 %
+            }
+            return baseRate;
+          };
+        }
+
+        const result = simulateSinglePath(params, etfYieldFn, expert, overrides);
+        return {
+          ...result,
+          isMonteCarlo: false,
+          isCrash: true,
+          crashBannerTitle,
+          crashBannerSub
+        };
+      }
+
+      // 3. MONTE-CARLO SIMULATION (Konfigurierbare Pfade, Seed & Student-t Fat Tails)
+      if (mode === 'monteCarlo') {
+        const startTime = performance.now();
+        const NUM_PATHS = expert.mcPaths || 1000;
+        const mu = params.returnPot3;
+        const sigma = expert.volatility;
+        const simYears = params.simulationYears;
+        const useFatTails = expert.mcDistributionModel !== 'lognormal';
+        const distTitle = useFatTails ? 'Student-t / Fat Tails' : 'Klassisch / Gauß';
+
+        let seed = 42;
+        if (expert.mcSeedMode === 'random') {
+          seed = Math.floor(Math.random() * 10000000);
+        } else {
+          seed = expert.mcSeed !== undefined ? expert.mcSeed : 42;
+        }
+        const rng = createMulberry32(seed);
+
+        const allPathsCapitals = Array.from({ length: simYears + 1 }, () => new Float64Array(NUM_PATHS));
+        let solventPathsCount = 0;
+        const allPaths = [];
+
+        for (let p = 0; p < NUM_PATHS; p++) {
+          const etfYieldFn = () => {
+            const z = useFatTails ? sampleStudentT5(rng) : sampleStandardNormal(rng);
+            // Renditeverteilung (mit Student-t fat tails oder lognormal)
+            const r = Math.exp((Math.log(1 + mu) - 0.5 * sigma * sigma) + sigma * z) - 1;
+            return Math.max(-0.90, Math.min(2.5, r));
+          };
+          const pathRes = simulateSinglePath(params, etfYieldFn, expert);
+          if (pathRes.bankruptYear === null) {
+            solventPathsCount++;
+          }
+          for (let y = 0; y <= simYears; y++) {
+            allPathsCapitals[y][p] = pathRes.history[y] ? pathRes.history[y].totalCapital : 0;
+          }
+          allPaths.push(pathRes);
+        }
+
+        const successRate = +( (solventPathsCount / NUM_PATHS) * 100 ).toFixed(1);
+
+        const p10Curve = new Float64Array(simYears + 1);
+        const p50Curve = new Float64Array(simYears + 1);
+        const p90Curve = new Float64Array(simYears + 1);
+
+        for (let y = 0; y <= simYears; y++) {
+          const sorted = Array.from(allPathsCapitals[y]).sort((a, b) => a - b);
+          p10Curve[y] = sorted[Math.floor(NUM_PATHS * 0.10)];
+          p50Curve[y] = sorted[Math.floor(NUM_PATHS * 0.50)];
+          p90Curve[y] = sorted[Math.floor(NUM_PATHS * 0.90)];
+        }
+
+        // Repräsentativen Pfad finden, der dem 50. Perzentil (Median) am nächsten ist
+        const targetP50Final = p50Curve[simYears];
+        let bestIdx = 0;
+        let bestDiff = Infinity;
+        for (let p = 0; p < NUM_PATHS; p++) {
+          const diff = Math.abs(allPaths[p].finalTotal - targetP50Final);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            bestIdx = p;
+          }
+        }
+        const representativeMedianPath = allPaths[bestIdx];
+        const calcDurationMs = Math.round(performance.now() - startTime);
+
+        return {
+          ...representativeMedianPath,
+          isMonteCarlo: true,
+          isCrash: false,
+          mcSuccessRate: successRate,
+          mcP10: p10Curve[simYears],
+          mcP50: p50Curve[simYears],
+          mcP90: p90Curve[simYears],
+          p10Curve: Array.from(p10Curve),
+          p50Curve: Array.from(p50Curve),
+          p90Curve: Array.from(p90Curve),
+          volatility: sigma,
+          mcPaths: NUM_PATHS,
+          mcDistributionTitle: distTitle,
+          mcCalcMs: calcDurationMs,
+          mcSeedUsed: seed,
+          mcSeedMode: expert.mcSeedMode || 'fixed'
+        };
+      }
+
+      // Fallback
+      return simulateSinglePath(params, () => params.returnPot3, expert);
+    }
+
+    // --- 4. UI AKTUALISIERUNG & KPI RENDERING ---
+    function updateUI(results) {
+      const { params, initialPot1, initialPot2, initialPot3, history, bankruptYear, finalTotal, totalWithdrawn } = results;
+
+      // 1. Textanzeigen & Mini-Bar in linker Spalte
+      const accYears = params.accumulationYears || 0;
+      
+      const remaining = Math.max(0, (initialPot1 + initialPot2 + initialPot3) - initialPot1);
+      document.getElementById('remainingCapitalVal').textContent = currencyFmt.format(remaining);
+      document.getElementById('initialPot1Val').textContent = currencyFmt.format(initialPot1);
+      document.getElementById('initialPot2Val').textContent = currencyFmt.format(initialPot2);
+      document.getElementById('initialPot3Val').textContent = currencyFmt.format(initialPot3);
+
+      document.getElementById('labelSummaryPot1').textContent = currencyFmt.format(initialPot1);
+      document.getElementById('labelSummaryPot2').textContent = currencyFmt.format(initialPot2);
+      document.getElementById('labelSummaryPot3').textContent = currencyFmt.format(initialPot3);
+
+      const accBadge = document.getElementById('accumulationBadge');
+      const accInfo = document.getElementById('accumulationInfoText');
+      const savingsBox = document.getElementById('monthlySavingsContainer');
+
+      if (accBadge) {
+        if (accYears === 0) {
+          accBadge.textContent = 'Sofort';
+          accBadge.className = 'text-xs text-slate-500 font-normal bg-slate-100 px-1.5 py-0.5 rounded';
+        } else {
+          accBadge.textContent = `${accYears} Jahre`;
+          accBadge.className = 'text-xs text-indigo-700 font-bold bg-indigo-100 px-1.5 py-0.5 rounded';
+        }
+      }
+
+      if (accInfo) {
+        if (accYears === 0) {
+          accInfo.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Entnahme startet sofort ab Jahr 1 (Alter ${params.startAge + 1})</span>
+          `;
+        } else {
+          const retStartAge = params.startAge + accYears;
+          const retFirstWithAge = retStartAge + 1;
+          accInfo.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span class="text-indigo-900 font-medium">${accYears} J. Ansparen (bis Alter ${retStartAge}) ➔ Entnahme ab Jahr ${accYears + 1} (Alter ${retFirstWithAge})</span>
+          `;
+        }
+      }
+
+      if (savingsBox) {
+        savingsBox.classList.toggle('hidden', accYears === 0);
+      }
+
+      // Entnahme-Info im Jahr 1 bzw. bei Entnahmebeginn
+      const initialYearly = params.monthlyWithdrawal * 12;
+      const withInfoElem = document.getElementById('withdrawalYearlyInfo');
+      if (withInfoElem) {
+        if (accYears > 0) {
+          const estInflFactor = Math.pow(1 + params.inflationRate, accYears);
+          const estMonthlyAtStart = Math.round(params.monthlyWithdrawal * estInflFactor);
+          withInfoElem.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Start in Jahr ${accYears + 1} (Alter ${params.startAge + accYears + 1}) mit ca. <strong>${currencyFmt.format(estMonthlyAtStart)}</strong>/Mo. (inflationsbereinigt)</span>
+          `;
+        } else {
+          withInfoElem.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Entspricht anfänglich <strong>${currencyFmt.format(initialYearly)}</strong> pro Jahr</span>
+          `;
+        }
+      }
+
+      // Erklärung Topf 1
+      document.getElementById('pot1Explanation').textContent = `(${params.pot1Months} × ${currencyFmt.format(params.monthlyWithdrawal)})`;
+
+      // Topf 3 %-Label
+      const pot3SharePct = Math.round((1 - params.pot2Share) * 100);
+      document.getElementById('pot3ShareLabel').textContent = `${pot3SharePct} % Rest`;
+
+      // Mini-Bar Aufteilung in %
+      const totalInitial = params.startCapital || 1;
+      const p1Pct = (initialPot1 / totalInitial) * 100;
+      const p2Pct = (initialPot2 / totalInitial) * 100;
+      const p3Pct = (initialPot3 / totalInitial) * 100;
+
+      document.getElementById('barPot1').style.width = `${p1Pct}%`;
+      document.getElementById('barPot2').style.width = `${p2Pct}%`;
+      document.getElementById('barPot3').style.width = `${p3Pct}%`;
+
+      // 2. KPI Kacheln aktualisieren
+      const reachCard = document.getElementById('kpiReachCard');
+      const reachValue = document.getElementById('kpiReachValue');
+      const reachSub = document.getElementById('kpiReachSub');
+      const reachIcon = document.getElementById('kpiReachIcon');
+
+      if (bankruptYear === null) {
+        // Geld reicht über den vollen Zeitraum
+        reachValue.textContent = `> ${params.simulationYears} Jahre`;
+        reachValue.className = 'text-lg sm:text-xl font-extrabold text-emerald-700 tracking-tight';
+        if (accYears > 0) {
+          reachSub.textContent = `${accYears} J. Sparen + ${params.simulationYears - accYears} J. Entnahme (bis Alter ${params.startAge + params.simulationYears})`;
+        } else {
+          reachSub.textContent = `Kapital reicht bis mind. Alter ${params.startAge + params.simulationYears}`;
+        }
+        reachSub.className = 'text-xs text-emerald-600 font-semibold mt-1';
+        reachCard.className = 'bg-emerald-50/50 rounded-2xl p-4 border border-emerald-200 shadow-sm relative overflow-hidden transition-colors';
+        reachIcon.className = 'w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center';
+        reachIcon.innerHTML = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>';
+      } else {
+        // Geld ist vorzeitig aufgebraucht
+        const bankruptAge = params.startAge + bankruptYear;
+        reachValue.textContent = `Nach ${bankruptYear} Jahren`;
+        reachValue.className = 'text-lg sm:text-xl font-extrabold text-rose-700 tracking-tight';
+        reachSub.textContent = `Aufgebraucht mit Alter ${bankruptAge} (Jahr ${bankruptYear})`;
+        reachSub.className = 'text-xs text-rose-600 font-semibold mt-1';
+        reachCard.className = 'bg-rose-50/50 rounded-2xl p-4 border border-rose-200 shadow-sm relative overflow-hidden transition-colors';
+        reachIcon.className = 'w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center';
+        reachIcon.innerHTML = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      }
+
+      // KPI: Restvermögen & Kapital bei Entnahmebeginn
+      const endCapitalElem = document.getElementById('kpiEndCapitalValue');
+      endCapitalElem.textContent = currencyFmt.format(finalTotal);
+      if (results.capitalAtRetirementStart !== null && results.capitalAtRetirementStart !== undefined) {
+        document.getElementById('kpiEndCapitalSub').innerHTML = `
+          Bei Entnahmebeginn: <strong class="text-indigo-700 font-semibold">${currencyFmt.format(results.capitalAtRetirementStart)}</strong>
+          <span class="block text-[10px] text-slate-500">Endstand: ${currencyFmt.format(finalTotal)}</span>
+        `;
+      } else if (finalTotal > params.startCapital) {
+        endCapitalElem.className = 'text-lg sm:text-xl font-extrabold text-emerald-600 tracking-tight';
+        document.getElementById('kpiEndCapitalSub').textContent = `Vermögenszuwachs: +${currencyFmt.format(finalTotal - params.startCapital)}`;
+      } else if (finalTotal > 0) {
+        endCapitalElem.className = 'text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight';
+        document.getElementById('kpiEndCapitalSub').textContent = `Nach ${params.simulationYears} Jahren verbleibend`;
+      } else {
+        endCapitalElem.className = 'text-lg sm:text-xl font-extrabold text-slate-400 tracking-tight';
+        document.getElementById('kpiEndCapitalSub').textContent = `Vollständig verzehrt`;
+      }
+
+      // KPI: Entnommen & Zinsgewinn
+      document.getElementById('kpiTotalWithdrawnValue').textContent = currencyFmt.format(totalWithdrawn);
+      const totalSavingsInvested = (params.monthlySavings || 0) * 12 * accYears;
+      const totalCostBasis = params.startCapital + totalSavingsInvested;
+      const totalGeneratedReturn = (finalTotal + totalWithdrawn) - totalCostBasis;
+      const gainElem = document.getElementById('kpiTotalGainSub');
+      if (totalGeneratedReturn >= 0) {
+        gainElem.textContent = `Erwirtschaftet: +${currencyFmt.format(totalGeneratedReturn)}`;
+        gainElem.className = 'text-xs text-indigo-600 font-medium mt-1';
+      } else {
+        gainElem.textContent = `Differenz: ${currencyFmt.format(totalGeneratedReturn)}`;
+        gainElem.className = 'text-xs text-slate-500 font-medium mt-1';
+      }
+
+      // Badge in Table Header
+      document.getElementById('tableRowsCountBadge').textContent = `${params.simulationYears} Jahre`;
+
+      // Info über Zeithorizont / Alter aktualisieren
+      const endAge = params.startAge + params.simulationYears;
+      const endAgeElem = document.getElementById('endAgeInfo');
+      if (endAgeElem) {
+        if (endAge > 105) {
+          endAgeElem.innerHTML = `<span class="text-amber-600 font-medium">⚠️ Zeithorizont bis Alter ${endAge} (sehr hoher Planungshorizont).</span>`;
+        } else if (accYears > 0) {
+          endAgeElem.textContent = `${accYears} J. Ansparen (Alter ${params.startAge}–${params.startAge + accYears}) + ${params.simulationYears - accYears} J. Entnahme (bis Alter ${endAge}).`;
+        } else {
+          endAgeElem.textContent = `Plant den Ruhestand von Alter ${params.startAge} bis Alter ${endAge}.`;
+        }
+      }
+
+      // Chart Info Tag
+      const chartTag = document.getElementById('chartInfoTag');
+      if (params.monthlyWithdrawal === 0) {
+        chartTag.textContent = 'Modus: Reiner Vermögensaufbau (0 € Entnahme)';
+      } else if (accYears > 0) {
+        chartTag.textContent = `Modus: ${accYears} J. Ansparphase ➔ Entnahme (${currencyFmt.format(params.monthlyWithdrawal)}/Mo.) ab Alter ${params.startAge + accYears}`;
+      } else {
+        chartTag.textContent = `Modus: Entnahmeplan (${currencyFmt.format(params.monthlyWithdrawal)}/Mo.)`;
+      }
+
+      // Banner & Legenden-Steuerung für Experten-Modi
+      const mcBanner = document.getElementById('monteCarloBanner');
+      const btnTogglePercentiles = document.getElementById('btnTogglePercentiles');
+
+      if (results.isMonteCarlo) {
+        mcBanner?.classList.remove('hidden');
+        if (btnTogglePercentiles) {
+          btnTogglePercentiles.classList.remove('hidden');
+          btnTogglePercentiles.classList.add('flex');
+        }
+
+        const successValElem = document.getElementById('mcSuccessRateValue');
+        if (successValElem) {
+          successValElem.textContent = `${results.mcSuccessRate} %`;
+          if (results.mcSuccessRate >= 85) {
+            successValElem.className = 'text-xl sm:text-2xl font-black text-emerald-400 tracking-tight leading-none mt-0.5';
+          } else if (results.mcSuccessRate >= 70) {
+            successValElem.className = 'text-xl sm:text-2xl font-black text-amber-400 tracking-tight leading-none mt-0.5';
+          } else {
+            successValElem.className = 'text-xl sm:text-2xl font-black text-rose-400 tracking-tight leading-none mt-0.5';
+          }
+        }
+        const volDisp = document.getElementById('mcVolDisplay');
+        if (volDisp) volDisp.textContent = `${(results.volatility * 100).toFixed(1).replace('.', ',')} %`;
+
+        const p10Elem = document.getElementById('mcP10Value');
+        if (p10Elem) p10Elem.textContent = currencyFmt.format(results.mcP10);
+        const p50Elem = document.getElementById('mcP50Value');
+        if (p50Elem) p50Elem.textContent = currencyFmt.format(results.mcP50);
+        const p90Elem = document.getElementById('mcP90Value');
+        if (p90Elem) p90Elem.textContent = currencyFmt.format(results.mcP90);
+
+        const pathsBannerElem = document.getElementById('mcPathsBannerCount');
+        if (pathsBannerElem) pathsBannerElem.textContent = (results.mcPaths || 1000).toLocaleString('de-DE');
+
+        const calcTimeElem = document.getElementById('mcCalcTimeBadge');
+        if (calcTimeElem) calcTimeElem.textContent = `⚡ Berechnet in ${results.mcCalcMs || 8} ms`;
+
+        const seedBadgeElem = document.getElementById('mcSeedBadge');
+        if (seedBadgeElem) {
+          if (results.mcSeedMode === 'random') {
+            seedBadgeElem.textContent = `🎲 Zufall (Seed: ${results.mcSeedUsed})`;
+          } else {
+            seedBadgeElem.textContent = `🔒 Seed: ${results.mcSeedUsed}`;
+          }
+        }
+
+        const distBadgeElem = document.getElementById('mcDistBadge');
+        if (distBadgeElem) {
+          distBadgeElem.textContent = results.mcDistributionTitle || 'Student-t / Fat Tails';
+        }
+      } else {
+        mcBanner?.classList.add('hidden');
+        if (btnTogglePercentiles) {
+          btnTogglePercentiles.classList.add('hidden');
+          btnTogglePercentiles.classList.remove('flex');
+        }
+      }
+
+      const crashBanner = document.getElementById('crashBanner');
+      if (results.isCrash) {
+        crashBanner?.classList.remove('hidden');
+        const titleElem = document.getElementById('crashBannerTitle');
+        if (titleElem) titleElem.textContent = results.crashBannerTitle;
+        const subElem = document.getElementById('crashBannerSub');
+        if (subElem) subElem.textContent = results.crashBannerSub;
+      } else {
+        crashBanner?.classList.add('hidden');
+      }
+
+      updateLegendToggleButtons();
+
+      // 3. Chart & Tabelle aktualisieren (ohne globale DOM-Neutraversierung)
+      updateChart(results);
+      updateTable(results);
+    }
+
+    // --- 5. INTERAKTIVE CHART-STEUERUNG & VISUALISIERUNG ---
+    let showWithdrawalsLine = true;
+    let showPercentilesLines = true;
+    let isChartHelpOpen = false;
+
+    function toggleWithdrawalsLine() {
+      showWithdrawalsLine = !showWithdrawalsLine;
+      updateLegendToggleButtons();
+      if (simulationChart) {
+        simulationChart.data.datasets.forEach((ds) => {
+          if (ds.label.includes('Entnahmen')) {
+            ds.hidden = !showWithdrawalsLine;
+          }
+        });
+        simulationChart.update();
+      }
+    }
+
+    function togglePercentilesLines() {
+      showPercentilesLines = !showPercentilesLines;
+      updateLegendToggleButtons();
+      if (simulationChart) {
+        simulationChart.data.datasets.forEach((ds) => {
+          if (ds.label.includes('Perzentil')) {
+            ds.hidden = !showPercentilesLines;
+          }
+        });
+        simulationChart.update();
+      }
+    }
+
+    function toggleChartHelp() {
+      const content = document.getElementById('chartHelpContent');
+      const chevron = document.getElementById('chartHelpChevron');
+      if (!content || !chevron) return;
+      isChartHelpOpen = !isChartHelpOpen;
+      if (isChartHelpOpen) {
+        content.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+      } else {
+        content.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+    }
+
+    function updateLegendToggleButtons() {
+      const btnW = document.getElementById('btnToggleWithdrawals');
+      if (btnW) {
+        if (showWithdrawalsLine) {
+          btnW.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
+          btnW.innerHTML = '<span class="w-3.5 h-0.5 border-t-2 border-dashed border-rose-500 inline-block"></span><span>Entnahmen</span>';
+        } else {
+          btnW.className = 'px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-400 border border-slate-200 hover:bg-slate-200 transition flex items-center gap-1.5 cursor-pointer opacity-70';
+          btnW.innerHTML = '<span class="w-3.5 h-0.5 border-t border-slate-400 inline-block"></span><span class="line-through">Entnahmen</span>';
+        }
+      }
+
+      const btnP = document.getElementById('btnTogglePercentiles');
+      if (btnP) {
+        if (showPercentilesLines) {
+          btnP.classList.remove('bg-slate-100', 'text-slate-400', 'border-slate-200', 'hover:bg-slate-200', 'opacity-70', 'font-medium');
+          btnP.classList.add('bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'hover:bg-indigo-100', 'font-semibold', 'shadow-2xs');
+          btnP.innerHTML = '<span class="w-3.5 h-1.5 rounded-xs bg-indigo-200 border border-indigo-500 border-dashed inline-block"></span><span>10./90. Perzentil</span>';
+        } else {
+          btnP.classList.remove('bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'hover:bg-indigo-100', 'font-semibold', 'shadow-2xs');
+          btnP.classList.add('bg-slate-100', 'text-slate-400', 'border-slate-200', 'hover:bg-slate-200', 'opacity-70', 'font-medium');
+          btnP.innerHTML = '<span class="w-3.5 h-1.5 rounded-xs bg-slate-200 border border-slate-400 inline-block"></span><span class="line-through">10./90. Perzentil</span>';
+        }
+      }
+    }
+
+    function updateChart(results) {
+      const history = results.history || [];
+      const params = results.params || getInputs();
+
+      const labels = history.map(h => `Jahr ${h.year} (${h.age})`);
+      const pot1Data = history.map(h => Math.round(h.pot1));
+      const pot2Data = history.map(h => Math.round(h.pot2));
+      const pot3Data = history.map(h => Math.round(h.pot3));
+      const cumulativeWithdrawalsData = history.map(h => Math.round(h.cumulativeWithdrawn));
+
+      let maxWealth = Math.max(...history.map(h => h.totalCapital), 1);
+      if (results.isMonteCarlo && results.p90Curve) {
+        maxWealth = Math.max(maxWealth, ...results.p90Curve);
+      }
+      const maxWithdrawal = Math.max(...cumulativeWithdrawalsData, 1);
+      const chartYMax = Math.ceil(Math.max(maxWealth, maxWithdrawal) * 1.08);
+
+      const ctx = document.getElementById('simulationChart').getContext('2d');
+
+      if (simulationChart) {
+        simulationChart.destroy();
+      }
+
+      const datasets = [
+        {
+          label: 'Topf 1: Tagesgeld',
+          data: pot1Data,
+          backgroundColor: 'rgba(37, 99, 235, 0.65)', // Blue
+          borderColor: '#2563eb',
+          borderWidth: 1.5,
+          fill: true,
+          stack: 'wealth',
+          yAxisID: 'y',
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          tension: 0.2
+        },
+        {
+          label: 'Topf 2: Festgeld',
+          data: pot2Data,
+          backgroundColor: 'rgba(5, 150, 105, 0.65)', // Emerald
+          borderColor: '#059669',
+          borderWidth: 1.5,
+          fill: true,
+          stack: 'wealth',
+          yAxisID: 'y',
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          tension: 0.2
+        },
+        {
+          label: 'Topf 3: Aktien-ETF',
+          data: pot3Data,
+          backgroundColor: 'rgba(124, 58, 237, 0.65)', // Purple
+          borderColor: '#7c3aed',
+          borderWidth: 2,
+          fill: true,
+          stack: 'wealth',
+          yAxisID: 'y',
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          tension: 0.2
+        },
+        {
+          label: 'Kumulierte Entnahmen',
+          data: cumulativeWithdrawalsData,
+          backgroundColor: 'transparent',
+          borderColor: '#ef4444', // Red dashed
+          borderWidth: 2.5,
+          borderDash: [6, 5],
+          fill: false,
+          hidden: !showWithdrawalsLine,
+          stack: 'withdrawals',
+          yAxisID: 'yWithdrawals',
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          tension: 0.1
+        }
+      ];
+
+      // Optionale Monte-Carlo Bänder mit schattiertem Konfidenz-Band
+      if (results.isMonteCarlo && results.p10Curve && results.p90Curve) {
+        datasets.push({
+          label: '10. Perzentil (Pessimistischer Verlauf)',
+          data: results.p10Curve.map(v => Math.round(v)),
+          borderColor: '#475569', // Slate-600
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [4, 4],
+          fill: false,
+          hidden: !showPercentilesLines,
+          stack: 'percentile_p10',
+          yAxisID: 'yPercentiles',
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          tension: 0.1
+        });
+        datasets.push({
+          label: '90. Perzentil (Optimistischer Verlauf)',
+          data: results.p90Curve.map(v => Math.round(v)),
+          borderColor: '#6366f1', // Indigo-500
+          backgroundColor: 'rgba(99, 102, 241, 0.08)', // Schattiertes Band zwischen P10 und P90!
+          borderWidth: 2,
+          borderDash: [5, 4],
+          fill: '-1', // Füllt bis zum 10. Perzentil darunter
+          hidden: !showPercentilesLines,
+          stack: 'percentile_p90',
+          yAxisID: 'yPercentiles',
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          tension: 0.1
+        });
+      }
+
+      simulationChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: animateNextChart ? { duration: 300 } : false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: false // Eigene schlanke, interaktive HTML-Legende oben
+            },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.96)',
+              titleColor: '#f8fafc',
+              titleFont: { size: 12, weight: 'bold' },
+              bodyColor: '#e2e8f0',
+              bodyFont: { size: 11 },
+              padding: 12,
+              boxPadding: 4,
+              cornerRadius: 10,
+              borderColor: 'rgba(255, 255, 255, 0.12)',
+              borderWidth: 1,
+              callbacks: {
+                title: function(items) {
+                  if (!items.length) return '';
+                  const idx = items[0].dataIndex;
+                  const item = history[idx];
+                  if (!item) return '';
+                  return `Jahr ${item.year} (Alter ${item.age}) • Status: ${item.event}`;
+                },
+                beforeBody: function(items) {
+                  if (!items.length) return '';
+                  const idx = items[0].dataIndex;
+                  const item = history[idx];
+                  if (!item) return '';
+                  return [
+                    `💰 GESAMTVERMÖGEN (Median): ${currencyFmt.format(item.totalCapital)}`,
+                    `   (Summe der 3 Töpfe zu diesem Zeitpunkt)`,
+                    `────────────────────────────────────────`
+                  ];
+                },
+                label: function(context) {
+                  const idx = context.dataIndex;
+                  const item = history[idx];
+                  if (!item) return '';
+                  const val = context.parsed.y;
+                  const label = context.dataset.label;
+
+                  if (label.includes('Topf 1')) {
+                    return `🟦 Topf 1 (Tagesgeld):   ${currencyFmt.format(item.pot1)}`;
+                  }
+                  if (label.includes('Topf 2')) {
+                    return `🟩 Topf 2 (Festgeld):     ${currencyFmt.format(item.pot2)}`;
+                  }
+                  if (label.includes('Topf 3')) {
+                    return `🟪 Topf 3 (Aktien-ETF):   ${currencyFmt.format(item.pot3)}`;
+                  }
+                  if (label.includes('Kumulierte Entnahmen')) {
+                    if (item.year <= (params.accumulationYears || 0)) {
+                      return [
+                        `────────────────────────────────────────`,
+                        `🛒 ANSPARPHASE:`,
+                        `   • Bisher entnommen: 0 € (Aufschubzeit)`,
+                        (params.monthlySavings || 0) > 0 ? `   • Sparrate in ETF: ${currencyFmt.format(params.monthlySavings * 12)} / Jahr` : `   • Reiner Zinseszins des Startkapitals`
+                      ];
+                    }
+                    return [
+                      `────────────────────────────────────────`,
+                      `🛒 KONSUM & ENTNAHMEN:`,
+                      `   • Bisher insgesamt entnommen (rote Linie): ${currencyFmt.format(val)}`,
+                      `   • In diesem Jahr entnommen: ${currencyFmt.format(item.actualWithdrawal)}`
+                    ];
+                  }
+                  if (label.includes('10. Perzentil')) {
+                    return [
+                      `────────────────────────────────────────`,
+                      `🎲 MONTE-CARLO BANDBREITE (Gesamtvermögen):`,
+                      `   • 10. Perzentil (Pessimistisch): ${currencyFmt.format(val)}`
+                    ];
+                  }
+                  if (label.includes('90. Perzentil')) {
+                    return `   • 90. Perzentil (Optimistisch):  ${currencyFmt.format(val)}`;
+                  }
+                  return ` ${label}: ${currencyFmt.format(val)}`;
+                },
+                footer: function() {
+                  return ''; // Keine redundanten Zeilen mehr im Footer
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                maxTicksLimit: 12,
+                font: {
+                  size: 11
+                },
+                color: '#64748b'
+              }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              max: chartYMax,
+              grid: {
+                color: 'rgba(226, 232, 240, 0.8)'
+              },
+              ticks: {
+                callback: function(value) {
+                  if (value >= 1000000) return (value / 1000000).toFixed(1) + ' Mio. €';
+                  if (value >= 1000) return (value / 1000).toFixed(0) + 'k €';
+                  return value + ' €';
+                },
+                font: {
+                  size: 11
+                },
+                color: '#64748b'
+              }
+            },
+            yWithdrawals: {
+              display: false,
+              stacked: false,
+              beginAtZero: true,
+              max: chartYMax
+            },
+            yPercentiles: {
+              display: false,
+              stacked: false,
+              beginAtZero: true,
+              max: chartYMax
+            }
+          }
+        }
+      });
+    }
+
+    // --- 6. DETAIL-TABELLE RENDERING ---
+    function updateTable(results) {
+      const { history } = results;
+      const tbody = document.getElementById('simulationTableBody');
+      tbody.innerHTML = '';
+
+      history.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50 transition' : 'bg-slate-50/50 hover:bg-slate-100/70 transition';
+
+        let badgeClass = 'bg-slate-100 text-slate-600 border border-slate-200';
+        if (row.event.includes('Bankrott') || row.event.includes('aufgebraucht')) {
+          badgeClass = 'bg-rose-100 text-rose-700 border border-rose-200 font-semibold';
+        } else if (row.event.includes('Crash') || row.event.includes('Verkaufsstopp')) {
+          badgeClass = 'bg-amber-100 text-amber-800 border border-amber-300 font-semibold';
+        } else if (row.event.includes('Ansparphase')) {
+          badgeClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold';
+        } else if (row.event.includes('Entnahmebeginn')) {
+          badgeClass = 'bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold';
+        } else if (row.event.includes('GK:')) {
+          badgeClass = 'bg-indigo-100 text-indigo-800 border border-indigo-200 font-semibold';
+        } else if (row.event.includes('ETF-Ernte')) {
+          badgeClass = 'bg-purple-100 text-purple-700 border border-purple-200 font-semibold';
+        } else if (row.event.includes('Festgeld') || row.event.includes('Gleitpfad')) {
+          badgeClass = 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+        } else if (row.event === 'Start') {
+          badgeClass = 'bg-blue-100 text-blue-700 border border-blue-200';
+        }
+
+        tr.innerHTML = `
+          <td class="px-3.5 py-2.5 font-medium text-slate-800 whitespace-nowrap">
+            Jahr ${row.year} <span class="text-slate-400 font-normal">(${row.age} J.)</span>
+          </td>
+          <td class="px-3.5 py-2.5 text-right font-medium ${row.actualWithdrawal > 0 ? 'text-rose-600' : 'text-slate-400'} whitespace-nowrap">
+            ${currencyFmt.format(row.actualWithdrawal)}
+          </td>
+          <td class="px-3.5 py-2.5 text-right font-mono font-medium text-blue-700 whitespace-nowrap">
+            ${currencyFmt.format(row.pot1)}
+          </td>
+          <td class="px-3.5 py-2.5 text-right font-mono font-medium text-emerald-700 whitespace-nowrap">
+            ${currencyFmt.format(row.pot2)}
+          </td>
+          <td class="px-3.5 py-2.5 text-right font-mono font-medium text-purple-700 whitespace-nowrap">
+            ${currencyFmt.format(row.pot3)}
+          </td>
+          <td class="px-3.5 py-2.5 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+            ${currencyFmt.format(row.totalCapital)}
+          </td>
+          <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
+            <span class="inline-block text-[10px] px-2 py-0.5 rounded-full ${badgeClass}">
+              ${row.event}
+            </span>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Tabelle ein-/ausklappen
+    function toggleDataTable() {
+      const container = document.getElementById('dataTableContainer');
+      const chevron = document.getElementById('tableChevron');
+      isTableOpen = !isTableOpen;
+
+      if (isTableOpen) {
+        container.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+      } else {
+        container.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+    }
+
+    // CSV Export Funktion (RFC 4180 konform mit Blob & UTF-8 BOM)
+    function exportToCSV() {
+      if (!currentSimulationData || !currentSimulationData.history) return;
+
+      const headers = ['Jahr', 'Alter', 'Jahresentnahme (EUR)', 'Topf 1 Tagesgeld (EUR)', 'Topf 2 Festgeld (EUR)', 'Topf 3 ETF (EUR)', 'Gesamtvermoegen (EUR)', 'Status'];
+
+      const escapeCSV = (field) => {
+        const str = String(field ?? '');
+        if (str.includes(';') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      const rows = [
+        headers.map(escapeCSV).join(';')
+      ];
+
+      currentSimulationData.history.forEach(h => {
+        rows.push([
+          escapeCSV(h.year),
+          escapeCSV(h.age),
+          escapeCSV(Math.round(h.annualWithdrawal)),
+          escapeCSV(Math.round(h.pot1)),
+          escapeCSV(Math.round(h.pot2)),
+          escapeCSV(Math.round(h.pot3)),
+          escapeCSV(Math.round(h.totalCapital)),
+          escapeCSV(h.event)
+        ].join(';'));
+      });
+
+      const csvContent = "\uFEFF" + rows.join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `3-Toepfe-Simulation_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // --- 7. HASH SPEICHER- & LADE-LOGIK ---
+    function saveToHash() {
+      const params = getInputs();
+      const expert = params.expert || {};
+      const state = {
+        v: 3,
+        sc: params.startCapital,
+        mw: params.monthlyWithdrawal,
+        inf: +(params.inflationRate * 100).toFixed(2),
+        sa: params.startAge,
+        sy: params.simulationYears,
+        p1m: params.pot1Months,
+        p2s: +(params.pot2Share * 100).toFixed(1),
+        r1: +(params.returnPot1 * 100).toFixed(2),
+        r3: +(params.returnPot3 * 100).toFixed(2),
+        ay: params.accumulationYears || 0,
+        ms: params.monthlySavings || 0,
+        fg: festgeldAccounts.map(a => ({
+          n: a.name,
+          d: a.duration,
+          r: a.rate,
+          s: a.share
+        }))
+      };
+
+      // Experten-Optionen nur bei Abweichung vom Standard serialisieren
+      if (expert.marketMode && expert.marketMode !== 'deterministic') {
+        state.mm = expert.marketMode;
+        if (expert.marketMode === 'crash') {
+          state.cp = expert.crashPreset;
+          if (expert.crashPreset === 'custom') {
+            state.cy = expert.customCrashYear;
+            state.cl = +(expert.customCrashLoss * 100).toFixed(1);
+          }
+          if (expert.correlateInterest) state.ccz = 1;
+        } else if (expert.marketMode === 'monteCarlo') {
+          state.vol = +(expert.volatility * 100).toFixed(1);
+          if (expert.mcDistributionModel && expert.mcDistributionModel !== 'studentT') state.mcdm = expert.mcDistributionModel;
+          if (expert.mcPaths && expert.mcPaths !== 1000) state.mcp = expert.mcPaths;
+          if (expert.mcSeedMode && expert.mcSeedMode !== 'fixed') state.mcsm = expert.mcSeedMode;
+          if (expert.mcSeed !== undefined && expert.mcSeed !== 42) state.mcs = expert.mcSeed;
+        }
+      }
+
+      if (expert.withdrawalStrategy && expert.withdrawalStrategy !== 'fixedInflation') {
+        state.ws = expert.withdrawalStrategy;
+        if (expert.withdrawalStrategy === 'percentPortfolio') {
+          state.wpr = +(expert.withdrawalPercentRate * 100).toFixed(1);
+          state.wf = expert.withdrawalFloor;
+          state.wc = expert.withdrawalCap;
+        }
+      }
+
+      if (expert.rebalanceStrategy && expert.rebalanceStrategy !== 'annualCascade') {
+        state.rs = expert.rebalanceStrategy;
+      }
+
+      try {
+        const jsonStr = JSON.stringify(state);
+        const hash = btoa(encodeURIComponent(jsonStr));
+        window.location.hash = 'cfg=' + hash;
+
+        const fullUrl = window.location.href;
+
+        // In Modal eintragen
+        document.getElementById('shareUrlInput').value = fullUrl;
+        document.getElementById('shareHashTextarea').value = '#cfg=' + hash;
+
+        const fallbackSaveNotice = () => {
+          showToast('Hash in Adressleiste gespeichert!');
+        };
+
+        // In Zwischenablage kopieren
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(fullUrl).then(() => {
+            showToast('Link mit allen Einstellungen in Zwischenablage kopiert!');
+          }).catch(fallbackSaveNotice);
+        } else {
+          fallbackSaveNotice();
+        }
+
+        openModal('saveModal');
+      } catch (err) {
+        console.error('Fehler beim Speichern des Hashes:', err);
+        showToast('Fehler beim Erstellen des Hashes', 'error');
+      }
+    }
+
+    function openLoadModal() {
+      document.getElementById('hashLoadInput').value = '';
+      openModal('loadModal');
+      setTimeout(() => document.getElementById('hashLoadInput').focus(), 150);
+    }
+
+    function executeLoadFromInput() {
+      const input = document.getElementById('hashLoadInput').value.trim();
+      if (!input) {
+        showToast('Bitte einen Hash oder Link eingeben', 'error');
+        return;
+      }
+      const success = loadFromHash(input);
+      if (success) {
+        closeModal('loadModal');
+      }
+    }
+
+    function loadFromHash(hashInput) {
+      try {
+        let clean = hashInput.trim();
+        if (clean.includes('#cfg=')) {
+          clean = clean.split('#cfg=')[1];
+        } else if (clean.includes('cfg=')) {
+          clean = clean.split('cfg=')[1];
+        } else if (clean.startsWith('#')) {
+          clean = clean.substring(1);
+        }
+
+        // URL-Parameter Artefakte entfernen
+        clean = clean.split('&')[0];
+
+        const jsonStr = decodeURIComponent(atob(clean));
+        const state = JSON.parse(jsonStr);
+
+        if (state.sc !== undefined) setFieldVal('startCapital', state.sc);
+        if (state.mw !== undefined) setFieldVal('monthlyWithdrawal', state.mw);
+        if (state.ay !== undefined) setFieldVal('accumulationYears', state.ay);
+        else setFieldVal('accumulationYears', 0);
+        if (state.ms !== undefined) setFieldVal('monthlySavings', state.ms);
+        else setFieldVal('monthlySavings', 0);
+        if (state.inf !== undefined) setFieldVal('inflationRate', state.inf);
+        if (state.sa !== undefined) document.getElementById('startAge').value = state.sa;
+        if (state.sy !== undefined) setFieldVal('simulationYears', state.sy);
+        if (state.p1m !== undefined) setFieldVal('pot1Months', state.p1m);
+        if (state.p2s !== undefined) setFieldVal('pot2Share', state.p2s);
+        if (state.r1 !== undefined) setFieldVal('returnPot1', state.r1);
+        if (state.r3 !== undefined) setFieldVal('returnPot3', state.r3);
+
+        if (Array.isArray(state.fg) && state.fg.length > 0) {
+          festgeldAccounts = state.fg.map((a, i) => ({
+            id: 'fg-' + Date.now() + '-' + i,
+            name: a.n || `Festgeld ${a.d || 1}J`,
+            duration: Math.max(1, parseInt(a.d) || 1),
+            rate: Math.max(0, parseFloat(a.r) || 0),
+            share: Math.max(0, parseFloat(a.s) || +(100 / state.fg.length).toFixed(1))
+          }));
+        } else {
+          festgeldAccounts = [
+            { id: 'fg-1', name: 'Festgeld 1J', duration: 1, rate: 3.0, share: 33.33 },
+            { id: 'fg-2', name: 'Festgeld 2J', duration: 2, rate: 3.3, share: 33.33 },
+            { id: 'fg-3', name: 'Festgeld 3J', duration: 3, rate: 3.6, share: 33.34 }
+          ];
+        }
+
+        // Experten-Optionen wiederherstellen
+        if (state.mm) {
+          const el = document.getElementById('marketModeSelect');
+          if (el) el.value = state.mm;
+        }
+        if (state.cp) {
+          const el = document.getElementById('crashPresetSelect');
+          if (el) el.value = state.cp;
+        }
+        if (state.cy !== undefined) {
+          const el = document.getElementById('customCrashYear');
+          if (el) el.value = state.cy;
+        }
+        if (state.cl !== undefined) {
+          const el = document.getElementById('customCrashLoss');
+          if (el) el.value = state.cl;
+        }
+        if (state.vol !== undefined) {
+          const inp = document.getElementById('volatilityInput');
+          const sld = document.getElementById('volatilitySlider');
+          if (inp) inp.value = state.vol;
+          if (sld) sld.value = state.vol;
+        }
+        if (state.mcp !== undefined) {
+          const inp = document.getElementById('mcPathsInput');
+          const sel = document.getElementById('mcPathsSelect');
+          if (inp) inp.value = state.mcp;
+          if (sel) {
+            if (['1000', '2500', '5000', '10000'].includes(String(state.mcp))) {
+              sel.value = String(state.mcp);
+              if (inp) inp.classList.add('hidden');
+            } else {
+              sel.value = 'custom';
+              if (inp) inp.classList.remove('hidden');
+            }
+          }
+        }
+        if (state.mcsm) {
+          const sel = document.getElementById('mcSeedModeSelect');
+          if (sel) sel.value = state.mcsm;
+          const container = document.getElementById('mcSeedCustomContainer');
+          if (container) {
+            if (state.mcsm === 'random') container.classList.add('hidden');
+            else container.classList.remove('hidden');
+          }
+        }
+        if (state.mcs !== undefined) {
+          const inp = document.getElementById('mcSeedInput');
+          if (inp) inp.value = state.mcs;
+        }
+        if (state.mcdm) {
+          const el = document.getElementById('mcDistributionModelSelect');
+          if (el) el.value = state.mcdm;
+        } else {
+          const el = document.getElementById('mcDistributionModelSelect');
+          if (el) el.value = 'studentT';
+        }
+        if (state.ccz !== undefined) {
+          const el = document.getElementById('correlateInterestToggle');
+          if (el) el.checked = !!state.ccz;
+        } else {
+          const el = document.getElementById('correlateInterestToggle');
+          if (el) el.checked = false;
+        }
+        if (state.ws) {
+          const el = document.getElementById('withdrawalStrategySelect');
+          if (el) el.value = state.ws;
+        }
+        if (state.wpr !== undefined) {
+          const el = document.getElementById('withdrawalPercentRate');
+          if (el) el.value = state.wpr;
+        }
+        if (state.wf !== undefined) {
+          const el = document.getElementById('withdrawalFloor');
+          if (el) el.value = state.wf;
+        }
+        if (state.wc !== undefined) {
+          const el = document.getElementById('withdrawalCap');
+          if (el) el.value = state.wc;
+        }
+        if (state.rs) {
+          const el = document.getElementById('rebalanceStrategySelect');
+          if (el) el.value = state.rs;
+        }
+
+        renderFestgeldList();
+        animateNextChart = true;
+        onExpertOptionChange();
+        showToast('Einstellungen erfolgreich geladen!');
+        return true;
+      } catch (err) {
+        console.error('Fehler beim Dekodieren des Hashes:', err);
+        showToast('Ungültiger Hash-Code', 'error');
+        return false;
+      }
+    }
+
+    function copyShareUrl() {
+      const input = document.getElementById('shareUrlInput');
+      input.select();
+      input.setSelectionRange(0, 99999);
+
+      const fallbackCopy = () => {
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            showToast('Link in Zwischenablage kopiert!');
+          } else {
+            showToast('Kopieren fehlgeschlagen - bitte manuell kopieren', 'error');
+          }
+        } catch (err) {
+          showToast('Kopieren fehlgeschlagen - bitte manuell kopieren', 'error');
+        }
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(input.value).then(() => {
+          showToast('Link in Zwischenablage kopiert!');
+        }).catch(() => {
+          fallbackCopy();
+        });
+      } else {
+        fallbackCopy();
+      }
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('hidden');
+        el.classList.add('flex');
+        lucide.createIcons({ root: el });
+      }
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toastNotification');
+      const msgElem = document.getElementById('toastMessage');
+      const iconElem = document.getElementById('toastIcon');
+      if (!toast || !msgElem) return;
+
+      msgElem.textContent = msg;
+      if (type === 'error') {
+        iconElem.className = 'w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0';
+        iconElem.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+      } else {
+        iconElem.className = 'w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0';
+        iconElem.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3200);
+    }
+
+    // --- 8. BERECHNUNG ANSTOSSEN ---
+    function runSimulation() {
+      const params = getInputs();
+      currentSimulationData = simulate(params);
+      updateUI(currentSimulationData);
+    }
+
+    function debouncedRunSimulation() {
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => {
+          runSimulation();
+          rafPending = false;
+        });
+      }
+    }
+
+    // --- 9. DOM CONTENT LOADED INITIALISIERUNG ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Event-Delegation für Festgeld-Eingaben initialisieren
+      initFestgeldListeners();
+
+      // Bindings für Schieberegler und Inputfelder (mit rAF Debouncing)
+      bindSync('startCapital', 'startCapitalInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
+      bindSync('monthlyWithdrawal', 'monthlyWithdrawalInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
+      bindSync('inflationRate', 'inflationRateInput', debouncedRunSimulation);
+      bindSync('pot1Months', 'pot1MonthsInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
+      bindSync('pot2Share', 'pot2ShareInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
+      bindSync('returnPot1', 'returnPot1Input', debouncedRunSimulation);
+      bindSync('returnPot3', 'returnPot3Input', debouncedRunSimulation);
+      bindSync('simulationYears', 'simulationYearsInput', debouncedRunSimulation);
+      bindSync('accumulationYears', 'accumulationYearsInput', () => {
+        const syInput = document.getElementById('simulationYearsInput');
+        const sySlider = document.getElementById('simulationYears');
+        const curAcc = parseInt(document.getElementById('accumulationYearsInput').value) || 0;
+        if (parseInt(syInput.value) <= curAcc) {
+          const newSy = Math.min(50, curAcc + 10);
+          syInput.value = newSy;
+          if (sySlider) sySlider.value = newSy;
+        }
+        debouncedRunSimulation();
+      });
+      bindSync('monthlySavings', 'monthlySavingsInput', debouncedRunSimulation);
+
+      document.getElementById('startAge').addEventListener('input', debouncedRunSimulation);
+
+      // Prüfen, ob URL-Hash existiert
+      let loaded = false;
+      if (window.location.hash && window.location.hash.includes('cfg=')) {
+        loaded = loadFromHash(window.location.hash);
+      }
+      if (!loaded) {
+        renderFestgeldList();
+        animateNextChart = true;
+        onExpertOptionChange();
+      }
+
+      // Bei Hash-Änderung in der Adressleiste (z. B. Vor/Zurück im Browser)
+      window.addEventListener('hashchange', () => {
+        if (window.location.hash && window.location.hash.includes('cfg=')) {
+          loadFromHash(window.location.hash);
+        }
+      });
+
+      // Lucide Icons einmalig für statische UI-Elemente initialisieren
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

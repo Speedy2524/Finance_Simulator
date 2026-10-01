@@ -9,11 +9,13 @@
   <meta property="og:type" content="website">
   <title>3-Töpfe Ruhestands- & Entnahme-Simulator</title>
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Lucide Icons CDN -->
+  <!-- Tailwind CSS (Play-CDN). Hinweis: Diese Variante kompiliert im Browser und ist
+       fuer den Produktivbetrieb nicht gedacht - dort das Tailwind-CLI-Build einbinden. -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <!-- Lucide Icons. Empfehlung: @latest durch eine feste Version ersetzen, damit ein
+       Major-Release der Bibliothek die Seite nicht unangekuendigt veraendert. -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <script>
@@ -73,7 +75,7 @@
 <body class="min-h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
 
   <!-- Kopfbereich / Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
@@ -107,7 +109,7 @@
         <div class="h-4 w-px bg-slate-300 mx-1 hidden sm:block"></div>
 
         <!-- Hash Aktionen -->
-        <button onclick="saveToHash()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition flex items-center gap-1.5 shadow-xs" title="Einstellungen im URL-Hash speichern & Link kopieren">
+        <button onclick="saveToHash()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition flex items-center gap-1.5 shadow-sm" title="Einstellungen im URL-Hash speichern & Link kopieren">
           <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Hash speichern
         </button>
         <button onclick="openLoadModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition flex items-center gap-1.5 border border-slate-200" title="Gespeicherten Hash eingeben & laden">
@@ -215,7 +217,7 @@
                 <span class="text-[10px] text-indigo-700 font-bold bg-indigo-100 px-1.5 py-0.5 rounded">ETF-Aufbau</span>
               </label>
               <div class="flex items-center gap-1">
-                <input type="number" id="monthlySavingsInput" min="0" max="5000" step="50" value="0"
+                <input type="number" id="monthlySavingsInput" min="0" max="3000" step="50" value="0"
                   class="w-24 text-right font-bold text-slate-900 bg-white border border-indigo-200 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500">
                 <span class="text-xs font-semibold text-slate-600">€/Mo.</span>
               </div>
@@ -352,13 +354,13 @@
                       <i data-lucide="layers-3" class="w-3.5 h-3.5 text-emerald-600"></i>
                       Festgeldkonten (<span id="fgCountBadge">3</span>)
                     </span>
-                    <span id="fgShareSumBadge" class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded" title="Summe der Anteile">100%</span>
+                    <span id="fgShareSumBadge" class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded" title="Summe der Anteile">100%</span>
                   </div>
                   <div class="flex items-center gap-1">
                     <button type="button" onclick="distributeFestgeldSharesEvenly()" class="text-[11px] px-2 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-medium transition" title="Anteile gleichmäßig auf alle Konten aufteilen">
                       Gleichmäßig %
                     </button>
-                    <button type="button" onclick="addFestgeldAccount()" class="text-[11px] px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition flex items-center gap-1 shadow-xs" title="Neues Festgeldkonto hinzufügen">
+                    <button type="button" onclick="addFestgeldAccount()" class="text-[11px] px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition flex items-center gap-1 shadow-sm" title="Neues Festgeldkonto hinzufügen">
                       <i data-lucide="plus" class="w-3 h-3"></i> Konto +
                     </button>
                   </div>
@@ -368,6 +370,14 @@
                 <div id="festgeldAccountsList" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-0.5">
                   <!-- Dynamisch per JS generiert -->
                 </div>
+
+                <p class="text-[10px] text-emerald-800/70 leading-snug flex items-start gap-1">
+                  <i data-lucide="info" class="w-3 h-3 mt-0.5 shrink-0"></i>
+                  <span>Muss eine Tranche vor Ablauf ihrer Laufzeit angetastet werden, wird ein
+                  Vorschusszins fällig: <strong>Zinssatz × 0,5 × Restlaufzeit</strong> auf den
+                  entnommenen Betrag. Eine 3-Jahres-Tranche zu 3,6 % kostet bei sofortiger
+                  Auflösung also rund 5,4 % des entnommenen Betrags an entgangenem Zins.</span>
+                </p>
               </div>
             </div>
 
@@ -427,7 +437,7 @@
               <p class="text-[11px] text-emerald-700">Berechnet aus den Festgeldkonten in Box 2</p>
             </div>
             <div class="text-right">
-              <span id="returnPot2Display" class="font-mono font-bold text-xs text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-2xs">3,3 % p.a.</span>
+              <span id="returnPot2Display" class="font-mono font-bold text-xs text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-sm">3,3 % p.a.</span>
             </div>
           </div>
 
@@ -507,7 +517,7 @@
               <select id="marketModeSelect" onchange="onExpertOptionChange()" class="w-full text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
                 <option value="deterministic">Konstante Rendite (Standard, z.B. 7% p.a.)</option>
                 <option value="crash">Historisches Crash-Szenario (Sequence of Returns)</option>
-                <option value="monteCarlo">Monte-Carlo-Simulation (1.000 Pfade)</option>
+                <option value="monteCarlo">Monte-Carlo-Simulation (Pfadanzahl einstellbar)</option>
               </select>
 
               <!-- Crash-Optionen -->
@@ -519,7 +529,7 @@
                   <option value="earlyShock">Früher Schock (-30% in Jahr 1, -15% in Jahr 2)</option>
                   <option value="japanStag">Japan-Szenario (Verlorene Dekade: 15 Jahre Stagnation)</option>
                   <option value="stagflation1970">Stagflation 1970er (Inflation bis 11% &amp; Baisse)</option>
-                  <option value="systemicCrisis">Systemkrise &amp; Zinssturz (-45% Crash &amp; Zinsen auf 0,25%)</option>
+                  <option value="systemicCrisis">Systemkrise &amp; Zinssturz (-47% Crash &amp; Zinsen auf 0,25%)</option>
                   <option value="custom">Benutzerdefinierter Marktschock</option>
                 </select>
 
@@ -625,7 +635,7 @@
                     <div class="flex items-center gap-1.5">
                       <input type="number" id="mcSeedInput" min="1" max="999999" value="42" onchange="onExpertOptionChange()"
                         class="w-20 text-right font-mono font-bold text-purple-900 bg-white border border-purple-300 rounded px-1.5 py-0.5 text-xs" title="Deterministischer Startwert">
-                      <button type="button" onclick="rerollSeed()" class="px-2 py-0.5 rounded-lg bg-purple-200 hover:bg-purple-300 text-purple-900 font-semibold text-[11px] transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Zufälligen neuen Seed würfeln">
+                      <button type="button" onclick="rerollSeed()" class="px-2 py-0.5 rounded-lg bg-purple-200 hover:bg-purple-300 text-purple-900 font-semibold text-[11px] transition flex items-center gap-1 shadow-sm cursor-pointer" title="Zufälligen neuen Seed würfeln">
                         <span>🎲 Neu</span>
                       </button>
                     </div>
@@ -654,8 +664,9 @@
               <div id="guytonKlingerOptionsContainer" class="hidden p-3 bg-indigo-50/70 rounded-xl border border-indigo-200/80 space-y-1.5 text-xs text-indigo-900">
                 <p class="font-semibold text-indigo-950">Intelligenter Selbstschutz:</p>
                 <ul class="list-disc pl-4 space-y-1 text-[11px] leading-relaxed text-indigo-900/90">
-                  <li><strong>Kapitalerhalt:</strong> Fällt das Portfolio um &gt; 20 %, wird die Inflationserhöhung im Folgejahr eingefroren (0 % Erhöhung).</li>
-                  <li><strong>Wohlstand:</strong> Bei starken Marktgewinnen wird die Entnahme um 10 % für Konsum/Reisen angehoben.</li>
+                  <li><strong>Kapitalerhalt:</strong> Steigt die Entnahmerate &gt; 20% über den Startwert, wird der Inflationsausgleich ausgesetzt. Bei &gt; 35% wird die Entnahme um 10% gekürzt (außer in den letzten 15 Jahren).</li>
+                  <li><strong>Wohlstand:</strong> Fällt die Entnahmerate &gt; 20% unter den Startwert, wird die Entnahme um 10% angehoben.</li>
+                  <li>Die Entnahme ist nach oben und unten hart gedeckelt (80% bis 150% des Startwerts).</li>
                 </ul>
               </div>
 
@@ -721,7 +732,7 @@
             Das 3-Töpfe-Prinzip verständlich erklärt:
           </div>
           <ul class="space-y-1.5 pl-4 list-disc text-indigo-900/90 leading-relaxed">
-            <li><strong>Topf 1 (Tagesgeld):</strong> Das monatliche Ausgabenkonto für 1–3 Jahre. Schützt vor Notverkäufen bei Börsentiefs.</li>
+            <li><strong>Topf 1 (Tagesgeld):</strong> Das monatliche Ausgabenkonto für 0–5 Jahre. Schützt vor Notverkäufen bei Börsentiefs.</li>
             <li><strong>Topf 2 (Festgeld):</strong> Zinsbringende Sicherheitsstufe mit festen Laufzeiten. Füllt Topf 1 jährlich nach.</li>
             <li><strong>Topf 3 (Aktien-ETF):</strong> Der Rendite-Motor. Wächst langfristig und wird nur bei Bedarf ("Ernte") angezapft.</li>
           </ul>
@@ -753,21 +764,21 @@
               <div class="flex items-center gap-1.5 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200/80">
                 <span class="text-[10px] uppercase font-bold text-slate-400 mr-0.5 tracking-wider">Töpfe:</span>
                 <span class="flex items-center gap-1 text-blue-700 font-semibold text-[11px]" title="Topf 1 (Tagesgeld) – Unterste Fläche">
-                  <span class="w-2.5 h-2.5 rounded-xs bg-blue-600 inline-block shadow-2xs"></span> T1
+                  <span class="w-2.5 h-2.5 rounded-sm bg-blue-600 inline-block shadow-sm"></span> T1
                 </span>
                 <span class="text-slate-300">|</span>
                 <span class="flex items-center gap-1 text-emerald-700 font-semibold text-[11px]" title="Topf 2 (Festgeld) – Mittlere Fläche">
-                  <span class="w-2.5 h-2.5 rounded-xs bg-emerald-500 inline-block shadow-2xs"></span> T2
+                  <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block shadow-sm"></span> T2
                 </span>
                 <span class="text-slate-300">|</span>
                 <span class="flex items-center gap-1 text-purple-700 font-semibold text-[11px]" title="Topf 3 (Aktien-ETF) – Oberste Fläche">
-                  <span class="w-2.5 h-2.5 rounded-xs bg-purple-600 inline-block shadow-2xs"></span> T3
+                  <span class="w-2.5 h-2.5 rounded-sm bg-purple-600 inline-block shadow-sm"></span> T3
                 </span>
               </div>
 
               <!-- Button: Entnahmen-Linie umschalten -->
               <button type="button" id="btnToggleWithdrawals" onclick="toggleWithdrawalsLine()"
-                class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5 shadow-sm cursor-pointer"
                 title="Klicken, um die rote Entnahmen-Linie ein- oder auszublenden">
                 <span class="w-3.5 h-0.5 border-t-2 border-dashed border-rose-500 inline-block"></span>
                 <span>Entnahmen</span>
@@ -775,9 +786,9 @@
 
               <!-- Button: Monte-Carlo Bänder umschalten -->
               <button type="button" id="btnTogglePercentiles" onclick="togglePercentilesLines()"
-                class="hidden px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition items-center gap-1.5 shadow-2xs cursor-pointer"
+                class="hidden px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition items-center gap-1.5 shadow-sm cursor-pointer"
                 title="Klicken, um die Monte-Carlo Bänder (10. & 90. Perzentil) ein- oder auszublenden">
-                <span class="w-3.5 h-1.5 rounded-xs bg-indigo-200 border border-indigo-500 border-dashed inline-block"></span>
+                <span class="w-3.5 h-1.5 rounded-sm bg-indigo-200 border border-indigo-500 border-dashed inline-block"></span>
                 <span>10./90. Perzentil</span>
               </button>
             </div>
@@ -786,6 +797,12 @@
           <!-- Canvas für Chart.js -->
           <div class="relative w-full h-80 sm:h-96">
             <canvas id="simulationChart"></canvas>
+            <div id="calculatingOverlay" class="hidden absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-10">
+              <div class="flex items-center gap-2 text-indigo-700 font-semibold text-sm bg-white px-4 py-2 rounded-full shadow-md border border-indigo-100">
+                <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <span>Berechne Monte-Carlo-Pfade…</span>
+              </div>
+            </div>
           </div>
 
           <!-- Ausklappbare Diagramm-Lesehilfe -->
@@ -799,16 +816,16 @@
             </button>
             <div id="chartHelpContent" class="hidden px-3.5 pb-3 pt-1 border-t border-slate-200/60 text-slate-600 space-y-2">
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-[11px]">
-                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-sm space-y-1">
                   <div class="font-bold text-slate-800 flex items-center gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-xs bg-gradient-to-t from-blue-600 via-emerald-500 to-purple-600 inline-block shrink-0"></span>
+                    <span class="w-2.5 h-2.5 rounded-sm bg-gradient-to-t from-blue-600 via-emerald-500 to-purple-600 inline-block shrink-0"></span>
                     Die 3 Farbflächen (Töpfe)
                   </div>
                   <p class="leading-relaxed text-slate-600">
                     Stellen das vorhandene Kapital dar. Weil sie <strong>übereinandergestapelt</strong> sind, entspricht die <strong>oberste Konturkante dem Gesamtvermögen</strong> (Median-Erwartung).
                   </p>
                 </div>
-                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-sm space-y-1">
                   <div class="font-bold text-rose-700 flex items-center gap-1.5">
                     <span class="w-3.5 h-0.5 border-t-2 border-dashed border-rose-500 inline-block shrink-0"></span>
                     Rote gestrichelte Linie
@@ -817,9 +834,9 @@
                     <strong>Kumulierte Entnahmen:</strong> Zeigt, wie viel Geld du dir über alle Jahre <em>in Summe für deinen Konsum ausgezahlt hast</em>. Sie steigt kontinuierlich an.
                   </p>
                 </div>
-                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 shadow-sm space-y-1">
                   <div class="font-bold text-indigo-700 flex items-center gap-1.5">
-                    <span class="w-3.5 h-1.5 rounded-xs bg-indigo-100 border border-indigo-500 border-dashed inline-block shrink-0"></span>
+                    <span class="w-3.5 h-1.5 rounded-sm bg-indigo-100 border border-indigo-500 border-dashed inline-block shrink-0"></span>
                     Gestrichelte Bänder (Stochastik)
                   </div>
                   <p class="leading-relaxed text-slate-600">
@@ -853,7 +870,7 @@
                   <span id="mcDistBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30">Student-t / Fat Tails</span>
                   <span id="mcHardwareBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>GPU-Canvas aktiv</span>
+                    <span>Canvas aktiv</span>
                   </span>
                 </h3>
                 <p class="text-[11px] text-indigo-200/80 flex items-center gap-2 flex-wrap pt-0.5">
@@ -862,6 +879,11 @@
                   <span id="mcCalcTimeBadge" class="font-semibold text-indigo-300">⚡ Berechnet in -- ms</span>
                   <span>•</span>
                   <span id="mcSeedBadge" class="font-mono text-purple-300">🔒 Seed: 42</span>
+                </p>
+                <p id="mcReturnExplainer" class="text-[11px] text-indigo-200/70 pt-1 max-w-xl">
+                  Die eingestellte Rendite ist der Durchschnitt über alle Jahre. Wegen der
+                  Schwankung wächst der mittlere Pfad langsamer – deshalb liegt das Ergebnis
+                  unter der Berechnung mit konstanter Rendite.
                 </p>
               </div>
             </div>
@@ -977,7 +999,7 @@
             </div>
             
             <div class="flex items-center gap-2">
-              <button type="button" onclick="event.stopPropagation(); exportToCSV();" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-white text-slate-700 font-medium transition flex items-center gap-1.5 shadow-xs">
+              <button type="button" onclick="event.stopPropagation(); exportToCSV();" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-white text-slate-700 font-medium transition flex items-center gap-1.5 shadow-sm">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 <span class="hidden sm:inline">CSV / Excel</span>
               </button>
@@ -991,7 +1013,7 @@
           <div id="dataTableContainer" class="border-t border-slate-200 hidden">
             <div class="overflow-x-auto max-h-96 custom-scrollbar">
               <table class="w-full text-left text-xs text-slate-600">
-                <thead class="bg-slate-100/80 text-slate-700 font-semibold sticky top-0 border-b border-slate-200 backdrop-blur-xs z-10">
+                <thead class="bg-slate-100/80 text-slate-700 font-semibold sticky top-0 border-b border-slate-200 backdrop-blur-sm z-10">
                   <tr>
                     <th scope="col" class="px-3.5 py-2.5">Jahr (Alter)</th>
                     <th scope="col" class="px-3.5 py-2.5 text-right">Jahresentnahme</th>
@@ -1041,8 +1063,8 @@
   </div>
 
   <!-- Modal: Hash Speichern & Teilen -->
-  <div id="saveModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
+  <div id="saveModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 transition-opacity duration-200">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
           <i data-lucide="share-2" class="w-5 h-5 text-indigo-600"></i>
@@ -1061,7 +1083,7 @@
         <label class="text-xs font-semibold text-slate-700">Vollständiger Link (zum Teilen):</label>
         <div class="flex items-center gap-2">
           <input type="text" id="shareUrlInput" readonly class="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 select-all outline-none">
-          <button onclick="copyShareUrl()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shrink-0 transition flex items-center gap-1.5 shadow-xs">
+          <button onclick="copyShareUrl()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shrink-0 transition flex items-center gap-1.5 shadow-sm">
             <i data-lucide="copy" class="w-3.5 h-3.5"></i> Kopieren
           </button>
         </div>
@@ -1082,8 +1104,8 @@
   </div>
 
   <!-- Modal: Hash Laden -->
-  <div id="loadModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
+  <div id="loadModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 transition-opacity duration-200">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
           <i data-lucide="download" class="w-5 h-5 text-indigo-600"></i>
@@ -1106,7 +1128,7 @@
         <button onclick="closeModal('loadModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition">
           Abbrechen
         </button>
-        <button onclick="executeLoadFromInput()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-xs">
+        <button onclick="executeLoadFromInput()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-sm">
           <i data-lucide="check" class="w-3.5 h-3.5"></i> Einstellungen laden
         </button>
       </div>
@@ -1119,10 +1141,10 @@
   <script>
     // --- 1. GLOBALE ZUSTÄNDE & INITIALISIERUNG ---
     let simulationChart = null;
-    let currentSimulationData = [];
+    let currentSimulationData = null;
     let isTableOpen = false;
     let animateNextChart = true;
-    let rafPending = false;
+    
 
     // Currency Formatter für deutsches Format (z.B. "50.000 €")
     const currencyFmt = new Intl.NumberFormat('de-DE', {
@@ -1237,9 +1259,9 @@
         if (!isNaN(val)) {
           if (val > parseFloat(slider.max)) {
             if (inputId === 'startCapitalInput') {
-              slider.max = Math.ceil(val / 50000) * 50000;
+              slider.max = Math.min(1000000, Math.ceil(val / 50000) * 50000);
             } else {
-              slider.max = val;
+              slider.max = Math.min(parseFloat(input.max || slider.max), val);
             }
           }
           slider.value = val;
@@ -1255,12 +1277,20 @@
         if (val < min) val = min;
         if (val > max) val = max;
         input.value = val;
+        
+        // Lower slider max back if input allows
+        if (inputId === 'startCapitalInput') {
+          if (val <= 200000) slider.max = 200000;
+          else slider.max = Math.min(1000000, Math.ceil(val / 50000) * 50000);
+        } else if (inputId === 'monthlySavingsInput') {
+          slider.max = 3000;
+        }
         if (val > parseFloat(slider.max)) {
           if (inputId === 'startCapitalInput') {
-            slider.max = Math.ceil(val / 50000) * 50000;
-          } else {
-            slider.max = val;
-          }
+              slider.max = Math.min(1000000, Math.ceil(val / 50000) * 50000);
+            } else {
+              slider.max = Math.min(parseFloat(input.max || slider.max), val);
+            }
         }
         slider.value = val;
         if (callback) callback();
@@ -1374,18 +1404,24 @@
     function getExpertOptions() {
       const marketMode = document.getElementById('marketModeSelect')?.value || 'deterministic';
       const crashPreset = document.getElementById('crashPresetSelect')?.value || 'finanzkrise2008';
-      const customCrashYear = Math.max(1, parseInt(document.getElementById('customCrashYear')?.value) || 1);
-      const customCrashLoss = (parseFloat(document.getElementById('customCrashLoss')?.value) || -35) / 100;
+      const cyVal = document.getElementById('customCrashYear')?.value;
+      const customCrashYear = cyVal !== '' ? Math.min(50, Math.max(1, parseInt(cyVal) || 1)) : 1;
+      const clVal = document.getElementById('customCrashLoss')?.value;
+      const customCrashLoss = (clVal !== '' ? parseFloat(clVal) : -35) / 100;
       const correlateInterest = document.getElementById('correlateInterestToggle')?.checked || false;
       const mcDistributionModel = document.getElementById('mcDistributionModelSelect')?.value || 'studentT';
-      const volatility = Math.max(0.01, (parseFloat(document.getElementById('volatilityInput')?.value) || 15) / 100);
+      const volVal = document.getElementById('volatilityInput')?.value;
+      const volatility = Math.max(0.01, (volVal !== '' ? parseFloat(volVal) : 15) / 100);
       const mcPaths = Math.max(500, Math.min(25000, parseInt(document.getElementById('mcPathsInput')?.value) || 1000));
       const mcSeedMode = document.getElementById('mcSeedModeSelect')?.value || 'fixed';
-      const mcSeed = parseInt(document.getElementById('mcSeedInput')?.value) || 42;
+      const mcSeedVal = document.getElementById('mcSeedInput')?.value;
+      const mcSeed = mcSeedVal !== '' ? parseInt(mcSeedVal) : 42;
       const withdrawalStrategy = document.getElementById('withdrawalStrategySelect')?.value || 'fixedInflation';
       const withdrawalPercentRate = Math.max(0.001, (parseFloat(document.getElementById('withdrawalPercentRate')?.value) || 4) / 100);
-      const withdrawalFloor = Math.max(0, parseFloat(document.getElementById('withdrawalFloor')?.value) || 0);
-      const withdrawalCap = Math.max(withdrawalFloor, parseFloat(document.getElementById('withdrawalCap')?.value) || 999999);
+      const wfVal = document.getElementById('withdrawalFloor')?.value;
+      const withdrawalFloor = Math.max(0, wfVal !== '' ? parseFloat(wfVal) : 0);
+      const wcVal = document.getElementById('withdrawalCap')?.value;
+      const withdrawalCap = Math.max(withdrawalFloor, wcVal !== '' ? parseFloat(wcVal) : 999999);
       const rebalanceStrategy = document.getElementById('rebalanceStrategySelect')?.value || 'annualCascade';
 
       return {
@@ -1499,14 +1535,14 @@
       const startCapital = Math.max(10000, parseFloat(document.getElementById('startCapitalInput').value) || 10000);
       const monthlyWithdrawal = Math.max(0, Math.min(5000, parseFloat(document.getElementById('monthlyWithdrawalInput').value) || 0));
       const accumulationYears = Math.min(25, Math.max(0, parseInt(document.getElementById('accumulationYearsInput')?.value) || 0));
-      const monthlySavings = Math.min(5000, Math.max(0, parseFloat(document.getElementById('monthlySavingsInput')?.value) || 0));
+      const monthlySavings = Math.min(3000, Math.max(0, parseFloat(document.getElementById('monthlySavingsInput')?.value) || 0));
       const inflationRate = Math.max(0, Math.min(10, parseFloat(document.getElementById('inflationRateInput').value) || 0)) / 100;
       const pot1Months = Math.max(0, Math.min(60, parseInt(document.getElementById('pot1MonthsInput').value) || 0));
       const pot2Share = Math.min(100, Math.max(0, parseFloat(document.getElementById('pot2ShareInput').value) || 0)) / 100;
       const returnPot1 = Math.max(0, Math.min(10, parseFloat(document.getElementById('returnPot1Input').value) || 0)) / 100;
       const returnPot3 = Math.max(-5, Math.min(15, parseFloat(document.getElementById('returnPot3Input').value) || 0)) / 100;
       const simulationYears = Math.min(50, Math.max(accumulationYears + 1, parseInt(document.getElementById('simulationYearsInput').value) || 30));
-      const startAge = Math.min(100, Math.max(40, parseInt(document.getElementById('startAge').value) || 65));
+      const startAge = Math.min(95, Math.max(40, parseInt(document.getElementById('startAge').value) || 65));
       const expert = getExpertOptions();
 
       return {
@@ -1542,14 +1578,47 @@
     function renderFestgeldList() {
       const listContainer = document.getElementById('festgeldAccountsList');
       if (!listContainer) return;
+
+      // Fokus merken, damit ein Neuaufbau der Liste die Eingabe nicht unterbricht.
+      // (Genau deshalb war das Neuzeichnen früher deaktiviert - und die Liste blieb stehen.)
+      let focusMemo = null;
+      const active = document.activeElement;
+      if (active && listContainer.contains(active) && active.dataset && active.dataset.field) {
+        const card = active.closest('[data-account-id]');
+        if (card) {
+          focusMemo = {
+            accountId: card.dataset.accountId,
+            field: active.dataset.field,
+            start: active.selectionStart,
+            end: active.selectionEnd
+          };
+        }
+      }
+
       listContainer.innerHTML = '';
 
       const countBadge = document.getElementById('fgCountBadge');
       if (countBadge) countBadge.textContent = festgeldAccounts.length;
 
       const params = getInputs();
-      const initialPot1 = Math.min(params.startCapital, params.pot1Months * params.monthlyWithdrawal);
-      const remainingCapital = Math.max(0, params.startCapital - initialPot1);
+      let estCapital = params.startCapital;
+      let estMonthly = params.monthlyWithdrawal;
+
+      if (params.accumulationYears > 0) {
+        // Muss exakt der Ansparlogik in simulateSinglePath entsprechen:
+        // nominale ETF-Rendite (nicht real) UND die Sparrate berücksichtigen.
+        const r3 = params.returnPot3;
+        const annualSavings = (params.monthlySavings || 0) * 12;
+        for (let i = 0; i < params.accumulationYears; i++) {
+          estCapital = annualSavings > 0
+            ? estCapital * (1 + r3) + annualSavings * (1 + r3 / 2)
+            : estCapital * (1 + r3);
+        }
+        estMonthly = estMonthly * Math.pow(1 + params.inflationRate, params.accumulationYears);
+      }
+
+      const initialPot1 = Math.min(estCapital, params.pot1Months * estMonthly);
+      const remainingCapital = Math.max(0, estCapital - initialPot1);
       const initialPot2 = remainingCapital * params.pot2Share;
 
       const totalShareRaw = festgeldAccounts.reduce((sum, a) => sum + (parseFloat(a.share) || 0), 0);
@@ -1588,7 +1657,7 @@
         const approxAmount = Math.round(initialPot2 * (itemShare / totalShare));
 
         const card = document.createElement('div');
-        card.className = 'bg-white p-2 rounded-lg border border-emerald-200/80 shadow-2xs space-y-1.5 transition';
+        card.className = 'bg-white p-2 rounded-lg border border-emerald-200/80 shadow-sm space-y-1.5 transition';
         card.dataset.accountId = acc.id;
 
         card.innerHTML = `
@@ -1635,6 +1704,20 @@
         listContainer.appendChild(card);
       });
 
+      // Fokus wiederherstellen
+      if (focusMemo) {
+        const card = listContainer.querySelector(`[data-account-id="${CSS.escape(focusMemo.accountId)}"]`);
+        const field = card && card.querySelector(`[data-field="${focusMemo.field}"]`);
+        if (field) {
+          field.focus();
+          try {
+            if (focusMemo.start !== null && focusMemo.start !== undefined) {
+              field.setSelectionRange(focusMemo.start, focusMemo.end);
+            }
+          } catch (e) { /* number inputs erlauben setSelectionRange nicht überall */ }
+        }
+      }
+
       // Zins-Anzeigen aktualisieren
       const avgRate = getWeightedFestgeldRate();
       const avgRateFormatted = `Ø ${avgRate.toFixed(1).replace('.', ',')} % p.a.`;
@@ -1644,6 +1727,18 @@
       
       const displayElem = document.getElementById('returnPot2Display');
       if (displayElem) displayElem.textContent = `${avgRate.toFixed(1).replace('.', ',')} % p.a.`;
+    }
+
+    // Neuzeichnen der Liste auf den nächsten Frame verschieben. Ein 'change'-Event
+    // feuert mitten im Blur; erst danach steht fest, wohin der Fokus wandert.
+    let festgeldRenderScheduled = false;
+    function scheduleFestgeldRender() {
+      if (festgeldRenderScheduled) return;
+      festgeldRenderScheduled = true;
+      requestAnimationFrame(() => {
+        festgeldRenderScheduled = false;
+        renderFestgeldList();
+      });
     }
 
     function escapeHtml(str) {
@@ -1686,7 +1781,7 @@
           sum += base;
         }
       });
-      renderFestgeldList();
+      scheduleFestgeldRender();
       debouncedRunSimulation();
     }
 
@@ -1701,33 +1796,40 @@
       } else if (field === 'rate') {
         acc.rate = Math.max(0, parseFloat(value) || 0);
       } else if (field === 'share') {
-        const newShare = Math.max(0, parseFloat(value) || 0);
+        const newShare = Math.min(100, Math.max(0, parseFloat(value) || 0));
         const oldShare = acc.share;
+        // Gesamtsumme VOR der Änderung: Sie wird erhalten, nicht auf 100 % erzwungen.
+        // Das Badge oben weist ausdrücklich auf abweichende Summen hin - die Automatik
+        // darf diese Aussage nicht heimlich überschreiben.
+        const previousTotal = festgeldAccounts.reduce((sum, a) => sum + (parseFloat(a.share) || 0), 0);
         acc.share = newShare;
-        
+
         if (festgeldAccounts.length > 1) {
           const diff = newShare - oldShare;
           const others = festgeldAccounts.filter(a => a.id !== id);
           const othersTotal = others.reduce((sum, a) => sum + a.share, 0);
-          
+
           if (othersTotal > 0) {
             others.forEach(a => {
               a.share = Math.max(0, a.share - (a.share / othersTotal) * diff);
               a.share = +(a.share).toFixed(1);
             });
           } else {
-            const distribute = Math.max(0, (100 - newShare) / others.length);
+            const distribute = Math.max(0, (previousTotal - newShare) / others.length);
             others.forEach(a => a.share = +(distribute).toFixed(1));
           }
-          
+
+          // Nur den Rundungsrest ausgleichen - auf die vorherige Summe, nicht auf 100.
           const currentTotal = festgeldAccounts.reduce((sum, a) => sum + a.share, 0);
-          if (Math.abs(currentTotal - 100) > 0.1 && others.length > 0) {
-              others[others.length - 1].share += +(100 - currentTotal).toFixed(1);
+          const residual = +(previousTotal - currentTotal).toFixed(1);
+          if (Math.abs(residual) > 0.05 && others.length > 0) {
+            const last = others[others.length - 1];
+            last.share = Math.max(0, +(last.share + residual).toFixed(1));
           }
         }
       }
 
-      renderFestgeldList();
+      scheduleFestgeldRender();
       debouncedRunSimulation();
     }
 
@@ -1794,28 +1896,39 @@
       let capitalAtRetirementStart = null;
 
       // 1. Initiale Topf-Aufteilung (in Jahr 0):
-      // Das Startkapital wird sofort aufgeteilt. So ist das Geld ab Tag 1 geschützt.
-      let initialPot1 = Math.min(startCapital, pot1Months * monthlyWithdrawal);
-      let remainingCapital = Math.max(0, startCapital - initialPot1);
-      let initialPot2 = remainingCapital * pot2Share;
-      let initialPot3 = remainingCapital - initialPot2;
-
-      // Konten der Festgeld-Treppe initialisieren
+      let initialPot1, initialPot2, initialPot3;
       let totalFgShare = festgeldAccounts.reduce((sum, a) => sum + (parseFloat(a.share) || 0), 0);
       if (totalFgShare <= 0) totalFgShare = 1;
 
+      if (accumulationYears > 0) {
+        // In der Ansparphase liegt das Startkapital zu 100 % im Aktien-ETF (Topf 3)
+        initialPot1 = 0;
+        initialPot2 = 0;
+        initialPot3 = startCapital;
+      } else {
+        initialPot1 = Math.min(startCapital, pot1Months * monthlyWithdrawal);
+        const remainingCapital = Math.max(0, startCapital - initialPot1);
+        initialPot2 = remainingCapital * pot2Share;
+        initialPot3 = remainingCapital - initialPot2;
+      }
+
+      // Konten der Festgeld-Treppe initialisieren
       let activeFgAccounts = festgeldAccounts.map(a => {
         const dur = Math.max(1, parseInt(a.duration) || 1);
         const share = Math.max(0, parseFloat(a.share) || 0);
         const rate = (parseFloat(a.rate) || 0) / 100;
-        const initialBalance = initialPot2 * (share / totalFgShare);
+        const initialBalance = (accumulationYears > 0) ? 0 : initialPot2 * (share / totalFgShare);
         return {
           id: a.id,
           name: a.name,
           duration: dur,
+          share: share,
           baseRate: rate,
           rate: rate,
           balance: initialBalance,
+          // remainingYears = noch verbleibende Restlaufzeit INKLUSIVE des laufenden Jahres.
+          // Wird erst am Jahresende heruntergezählt, damit eine Tranche waehrend ihres
+          // ersten Laufzeitjahres korrekt als gebunden (strafzinspflichtig) gilt.
           remainingYears: dur
         };
       });
@@ -1823,6 +1936,9 @@
       let pot1 = initialPot1;
       let pot3 = initialPot3;
 
+      let pot1AtRetirement = initialPot1;
+      let pot2AtRetirement = initialPot2;
+      let pot3AtRetirement = initialPot3;
       let cumulativeWithdrawn = 0;
       let bankruptYear = null;
       let cumulativeInflation = 1.0;
@@ -1839,6 +1955,9 @@
       let gkFloor = initialAnnualWithdrawal * 0.8;
       let gkCap = initialAnnualWithdrawal * 1.5;
       let gkPreviousWithdrawal = initialAnnualWithdrawal;
+      // Inflationsstand zum Kalibrierungszeitpunkt: Floor & Cap sind reale Leitplanken
+      // und werden ueber gkIndex mit der Inflation mitgefuehrt.
+      let gkCalibrationInflation = 1.0;
 
       // Startzustand (Jahr 0)
       history.push({
@@ -1851,7 +1970,7 @@
         pot2: getPot2Total(),
         pot3: pot3,
         totalCapital: pot1 + getPot2Total() + pot3,
-        event: 'Start'
+        event: accumulationYears > 0 ? 'Start (100% ETF)' : 'Start'
       });
 
       // Schleife Jahr 1 bis N
@@ -1879,27 +1998,69 @@
           continue;
         }
 
-        // Countdown für Festgeld-Laufzeiten verringern
-        activeFgAccounts.forEach(acc => {
-          acc.remainingYears -= 1;
-        });
-
         // ==========================================
-        // 1. ANSPARPHASE & 2. ENTNAHMEPHASE (Unified)
+        // 1. ANSPARPHASE (100% ETF Vermögensaufbau)
         // ==========================================
-        
         if (isAccumulating) {
           const annualSavings = monthlySavings * 12;
+          const r3 = etfYieldFn(y, currentAge);
           if (annualSavings > 0) {
-            pot3 += annualSavings;
             event = `Ansparphase (+${currencyFmt.format(annualSavings)})`;
+            pot3 = pot3 * (1 + r3) + annualSavings * (1 + r3 / 2);
           } else {
             event = 'Ansparphase (Zinseszins)';
+            pot3 = pot3 * (1 + r3);
           }
+
+          // Kumulierte Inflation fortschreiben
+          cumulativeInflation *= (1 + currentYearInflation);
+
+          const totalCapitalNow = pot1 + getPot2Total() + pot3;
           if (y === accumulationYears) {
-            // Save state right before retirement begins
-            capitalAtRetirementStart = pot1 + getPot2Total() + pot3;
+            capitalAtRetirementStart = totalCapitalNow;
           }
+
+          history.push({
+            year: y,
+            age: currentAge,
+            annualWithdrawal: 0,
+            actualWithdrawal: 0,
+            cumulativeWithdrawn: 0,
+            pot1: 0,
+            pot2: 0,
+            pot3: Math.max(0, pot3),
+            totalCapital: Math.max(0, totalCapitalNow),
+            event: event
+          });
+
+          continue;
+        }
+
+        // ==========================================
+        // 2. ENTNAHMEPHASE
+        // ==========================================
+        // Hinweis: Der Laufzeit-Countdown der Festgelder laeuft erst am JAHRESENDE
+        // (Abschnitt C2). Waehrend des laufenden Jahres gilt die Tranche als gebunden.
+
+        // Initialisierung der 3 Töpfe exakt zum Rentenstart
+        if (accumulationYears > 0 && isFirstWithdrawalYear) {
+          const startMonthlyWithdrawal = monthlyWithdrawal * cumulativeInflation;
+          const neededPot1 = Math.min(pot3, pot1Months * startMonthlyWithdrawal);
+          pot1 = neededPot1;
+          pot3 -= neededPot1;
+
+          const neededPot2 = pot3 * pot2Share;
+          pot3 -= neededPot2;
+          pot1AtRetirement = pot1;
+          pot2AtRetirement = neededPot2;
+          pot3AtRetirement = pot3;
+
+          activeFgAccounts.forEach(acc => {
+            const share = Math.max(0, parseFloat(acc.share) || 0);
+            acc.balance = neededPot2 * (share / totalFgShare);
+            acc.remainingYears = acc.duration; // Frische, volle Laufzeit zum Rentenstart
+            acc.rate = getFestgeldRateForYear(y, acc.baseRate);
+          });
         }
 
         // A. Entnahmehöhe nach gewählter Strategie berechnen
@@ -1908,62 +2069,73 @@
         const currentPot2Before = getPot2Total();
         const totalCapitalBeforeWithdrawal = pot1 + currentPot2Before + pot3;
 
-        if (isAccumulating) {
-          annualWithdrawal = 0;
-        } else {
-          if (opts.withdrawalStrategy === 'guytonKlinger') {
-            if (isFirstWithdrawalYear) {
-              // Guardrails am tatsächlichen Beginn der Entnahme kalibrieren
-              initialAnnualWithdrawal = (monthlyWithdrawal * cumulativeInflation) * 12;
-              initialWithdrawalRate = totalCapitalBeforeWithdrawal > 0 ? (initialAnnualWithdrawal / totalCapitalBeforeWithdrawal) : 0.04;
-              gkFloor = initialAnnualWithdrawal * 0.8;
-              gkCap = initialAnnualWithdrawal * 1.5;
-              gkPreviousWithdrawal = initialAnnualWithdrawal;
-              annualWithdrawal = initialAnnualWithdrawal;
-            } else {
-              if (totalCapitalBeforeWithdrawal <= 0) {
-                annualWithdrawal = 0;
-              } else {
-                const previousYearInflation = y > 1 ? getInflationForYear(y - 1) : 0;
-                const targetWithInflation = gkPreviousWithdrawal * (1 + previousYearInflation);
-                const currentWithdrawalRate = targetWithInflation / totalCapitalBeforeWithdrawal;
-
-                // Kapitalerhalt: Wenn Entnahmerate > 35% über Initialwert -> 10% Kürzung
-                if (currentWithdrawalRate > initialWithdrawalRate * 1.35) {
-                  annualWithdrawal = gkPreviousWithdrawal * 0.90;
-                  gkTriggerNote = 'GK: Kürzung (-10%)';
-                // Wenn Entnahmerate > 20% über Initialwert -> Inflationsanpassung einfrieren
-                } else if (currentWithdrawalRate > initialWithdrawalRate * 1.20) {
-                  annualWithdrawal = gkPreviousWithdrawal;
-                  gkTriggerNote = 'GK: Inflationsstopp';
-                // Wohlstands-Regel: Wenn Entnahmerate < 20% unter Initialwert -> +10% Erhöhung
-                } else if (currentWithdrawalRate < initialWithdrawalRate * 0.80) {
-                  annualWithdrawal = targetWithInflation * 1.10;
-                  gkTriggerNote = 'GK: Bonus (+10%)';
-                } else {
-                  annualWithdrawal = targetWithInflation;
-                }
-
-                // Floor & Cap Begrenzung
-                annualWithdrawal = Math.max(gkFloor, Math.min(gkCap, annualWithdrawal));
-              }
-            }
-            gkPreviousWithdrawal = annualWithdrawal;
-
-          } else if (opts.withdrawalStrategy === 'percentPortfolio') {
+        if (opts.withdrawalStrategy === 'guytonKlinger') {
+          if (isFirstWithdrawalYear) {
+            // Guardrails am tatsächlichen Beginn der Entnahme kalibrieren
+            initialAnnualWithdrawal = (monthlyWithdrawal * cumulativeInflation) * 12;
+            initialWithdrawalRate = totalCapitalBeforeWithdrawal > 0 ? (initialAnnualWithdrawal / totalCapitalBeforeWithdrawal) : 0.04;
+            gkFloor = initialAnnualWithdrawal * 0.8;
+            gkCap = initialAnnualWithdrawal * 1.5;
+            gkCalibrationInflation = cumulativeInflation;
+            gkPreviousWithdrawal = initialAnnualWithdrawal;
+            annualWithdrawal = initialAnnualWithdrawal;
+          } else {
             if (totalCapitalBeforeWithdrawal <= 0) {
               annualWithdrawal = 0;
             } else {
-              const rawAnnual = totalCapitalBeforeWithdrawal * opts.withdrawalPercentRate;
-              const minAnnual = opts.withdrawalFloor * 12;
-              const maxAnnual = opts.withdrawalCap * 12;
-              annualWithdrawal = Math.max(minAnnual, Math.min(maxAnnual, rawAnnual));
-            }
+              const previousYearInflation = y > 1 ? getInflationForYear(y - 1) : 0;
+              const targetWithInflation = gkPreviousWithdrawal * (1 + previousYearInflation);
+              const currentWithdrawalRate = targetWithInflation / totalCapitalBeforeWithdrawal;
 
-          } else {
-            // Standard: feste Entnahme + kumulierte dynamische Inflation
-            annualWithdrawal = (monthlyWithdrawal * cumulativeInflation) * 12;
+              // Kapitalerhalt: Wenn Entnahmerate > 35% über Initialwert -> 10% Kürzung
+              const isFinal15Years = (simulationYears - y) < 15;
+              if (currentWithdrawalRate > initialWithdrawalRate * 1.35 && !isFinal15Years) {
+                annualWithdrawal = gkPreviousWithdrawal * 0.90;
+                gkTriggerNote = 'GK: Kürzung (-10%)';
+              // Wenn Entnahmerate > 20% über Initialwert -> Inflationsanpassung einfrieren
+              } else if (currentWithdrawalRate > initialWithdrawalRate * 1.20 && !isFinal15Years) {
+                annualWithdrawal = gkPreviousWithdrawal;
+                gkTriggerNote = 'GK: Inflationsstopp';
+              // Wohlstands-Regel: Wenn Entnahmerate < 20% unter Initialwert -> +10% Erhöhung
+              } else if (currentWithdrawalRate < initialWithdrawalRate * 0.80) {
+                annualWithdrawal = targetWithInflation * 1.10;
+                gkTriggerNote = 'GK: Bonus (+10%)';
+              } else {
+                annualWithdrawal = targetWithInflation;
+              }
+
+              // Floor & Cap sind REALE Leitplanken: Sie werden mit der Inflation
+              // indexiert, sonst wuerde allein die Geldentwertung den Cap auslösen.
+              const gkIndex = gkCalibrationInflation > 0 ? (cumulativeInflation / gkCalibrationInflation) : 1;
+              const indexedFloor = gkFloor * gkIndex;
+              const indexedCap = gkCap * gkIndex;
+              const beforeClamp = annualWithdrawal;
+              annualWithdrawal = Math.max(indexedFloor, Math.min(indexedCap, annualWithdrawal));
+              // Wenn die Leitplanke greift, ist SIE das Ereignis - nicht die Regel davor.
+              if (annualWithdrawal < beforeClamp - 0.5) {
+                gkTriggerNote = 'GK: Obergrenze erreicht';
+              } else if (annualWithdrawal > beforeClamp + 0.5) {
+                gkTriggerNote = 'GK: Untergrenze greift';
+              }
+            }
           }
+          gkPreviousWithdrawal = annualWithdrawal;
+
+        } else if (opts.withdrawalStrategy === 'percentPortfolio') {
+          if (totalCapitalBeforeWithdrawal <= 0) {
+            annualWithdrawal = 0;
+          } else {
+            const rawAnnual = totalCapitalBeforeWithdrawal * opts.withdrawalPercentRate;
+            // Unter-/Obergrenze sind in heutiger Kaufkraft angegeben und werden
+            // deshalb mit der kumulierten Inflation mitgeführt.
+            const minAnnual = opts.withdrawalFloor * 12 * cumulativeInflation;
+            const maxAnnual = opts.withdrawalCap * 12 * cumulativeInflation;
+            annualWithdrawal = Math.max(minAnnual, Math.min(maxAnnual, rawAnnual));
+          }
+
+        } else {
+          // Standard: feste Entnahme + kumulierte dynamische Inflation
+          annualWithdrawal = (monthlyWithdrawal * cumulativeInflation) * 12;
         }
 
         // Kumulierte Inflation für Folgejahre fortschreiben
@@ -1974,7 +2146,6 @@
 
         // B. Entnahme abziehen nach Kaskaden-Prinzip
         // 1. Topf 1 (Tagesgeld)
-        const pot1Start = pot1;
         const w1 = Math.min(pot1, neededWithdrawal);
         pot1 -= w1;
         neededWithdrawal -= w1;
@@ -1983,14 +2154,15 @@
         // 2. Reicht Topf 1 nicht: Rest aus Topf 2 (Festgeld-Treppe)
         let w2 = 0;
         if (neededWithdrawal > 0.001) {
+          // Fällige Festgelder zuerst, dann kürzeste Restlaufzeiten
           const sortedFg = [...activeFgAccounts].sort((a, b) => a.remainingYears - b.remainingYears);
           for (let acc of sortedFg) {
             if (acc.balance > 0 && neededWithdrawal > 0.001) {
-              const take = Math.min(acc.balance, neededWithdrawal);
-              if (acc.remainingYears > 0) {
-                acc.brokenEarly = true;
-              }
-              acc.balance -= take;
+              const penaltyRate = (acc.remainingYears > 0) ? (acc.rate * 0.5 * acc.remainingYears) : 0;
+              const maxTake = acc.balance / (1 + penaltyRate);
+              const take = Math.min(maxTake, neededWithdrawal);
+              const penalty = take * penaltyRate;
+              acc.balance -= (take + penalty);
               neededWithdrawal -= take;
               actualWithdrawnThisYear += take;
               w2 += take;
@@ -2013,43 +2185,39 @@
         const shortfall = neededWithdrawal > 0.01;
 
         // C. Verzinsung
-        // Topf 1: Verzinsung auf durchschnittlichen Bestand
-        let pot1Avg = 0;
-        if (annualWithdrawal > 0) {
-          if (w1 >= annualWithdrawal) {
-            pot1Avg = Math.max(0, pot1Start - 0.5 * w1);
-          } else {
-            pot1Avg = (w1 * w1) / (2 * annualWithdrawal);
-          }
-        } else {
-          pot1Avg = pot1Start;
-        }
+        // Konvention: Die Jahresentnahme fliesst gleichmaessig ueber das Jahr ab.
+        // Topf 1 und Topf 3 verzinsen daher den entnommenen Betrag noch ein halbes Jahr mit.
+        // Topf 2 (Festgeld) tut das bewusst NICHT: Bei vorzeitiger Aufloesung verfaellt der
+        // Zins auf den entnommenen Betrag - das ist genau der modellierte Vorschusszins.
         const currentReturnPot1 = getPot1ReturnForYear(y);
-        const interestPot1 = pot1Avg * currentReturnPot1;
+        const interestPot1 = (pot1 + w1 * 0.5) * currentReturnPot1;
         pot1 = Math.max(0, pot1 + interestPot1);
 
-        // Topf 2: Jedes Festgeldkonto verzinst sein Restguthaben
+        // Topf 2: Jedes Festgeldkonto verzinst sein verbliebenes Guthaben zum vollen Zinssatz.
+        // Der Strafzins (Zinssatz x 0,5 x Restlaufzeit) wurde bereits oben auf den
+        // vorzeitig entnommenen Betrag erhoben.
         activeFgAccounts.forEach(acc => {
           if (acc.balance > 0) {
-            const effectiveRate = acc.brokenEarly ? acc.rate * 0.5 : acc.rate;
-            acc.balance = acc.balance * (1 + effectiveRate);
+            acc.balance += acc.balance * acc.rate;
           }
-          acc.brokenEarly = false;
         });
 
         // Topf 3: ETF-Rendite für Jahr y
         const r3 = etfYieldFn(y, currentAge);
-        pot3 = Math.max(0, pot3 * (1 + r3));
+        pot3 = Math.max(0, pot3 * (1 + r3) + w3 * (r3 / 2));
+
+        // C2. Laufzeit-Countdown am Jahresende: Erst jetzt wird eine Tranche faellig.
+        // Dadurch ist eine 1-Jahres-Tranche waehrend ihres Laufzeitjahres gebunden und
+        // steht erst beim Rebalancing am Jahresende strafzinsfrei zur Verfügung.
+        activeFgAccounts.forEach(acc => {
+          acc.remainingYears -= 1;
+        });
 
         // D. Rebalancing (Der Zins-Motor am Jahresende)
-        const nextYearInflation = getInflationForYear(y + 1);
-        let nextMonthlyWithdrawal;
-        if (annualWithdrawal > 0) {
-            nextMonthlyWithdrawal = (annualWithdrawal / 12) * (1 + nextYearInflation);
-        } else {
-            // In der Ansparphase muss die aufgelaufene Inflation für das Ziel-Niveau berücksichtigt werden
-            nextMonthlyWithdrawal = (monthlyWithdrawal * cumulativeInflation) * (1 + nextYearInflation);
-        }
+        // Hinweis: Die Entnahme des Folgejahres entspricht der diesjaehrigen Entnahme,
+        // fortgeschrieben mit der Inflation DIESES Jahres - deshalb getInflationForYear(y).
+        const inflationForNextYearWithdrawal = getInflationForYear(y);
+        const nextMonthlyWithdrawal = (annualWithdrawal > 0 ? (annualWithdrawal / 12) : monthlyWithdrawal) * (1 + inflationForNextYearWithdrawal);
         const targetPot1 = pot1Months * nextMonthlyWithdrawal;
         let rebalanceEventNote = '';
 
@@ -2058,17 +2226,9 @@
           let rebalanceFromPot2 = 0;
           let rebalanceFromPot3 = 0;
 
-          // Zuerst aus fälligen / kürzesten Festgeldkonten auffüllen
-          const sortedFgRebalance = [...activeFgAccounts].sort((a, b) => a.remainingYears - b.remainingYears);
-          for (let acc of sortedFgRebalance) {
-            if (acc.balance > 0 && deficit > 0.001) {
-              // In der Ansparphase keine Festgelder vorzeitig brechen (nur fällige verwenden)
-              if (isAccumulating && acc.remainingYears > 0) continue;
-
-              if (acc.remainingYears > 0) {
-                // Apply penalty retrospectively by clawing back half of this year's interest on the remaining balance
-                acc.balance -= (acc.balance * (acc.rate * 0.5));
-              }
+          // 1. Zuerst ausschließlich fällige Festgeldkonten (remainingYears <= 0) nutzen (vollkommen strafzinsfrei)
+          for (let acc of activeFgAccounts) {
+            if (acc.remainingYears <= 0 && acc.balance > 0 && deficit > 0.001) {
               const take = Math.min(acc.balance, deficit);
               acc.balance -= take;
               pot1 += take;
@@ -2077,7 +2237,7 @@
             }
           }
 
-          // Rest-Defizit aus Topf 3 (ETF) unter Berücksichtigung der Rebalancing-Regel
+          // 2. Fehlbetrag vorrangig aus Topf 3 (ETF-Ernte) auffüllen
           if (deficit > 0.001 && pot3 > 0) {
             if (opts.rebalanceStrategy === 'threshold' && r3 < 0) {
               // Schwellenwert: Keine ETF-Verkäufe in Verlustjahren!
@@ -2089,8 +2249,28 @@
               deficit -= rebalanceFromPot3;
               rebalanceEventNote = 'Rebalancing (ETF-Ernte)';
             }
-          } else if (rebalanceFromPot2 > 0) {
+          }
+          // Wenn kein ETF-Verkauf stattgefunden hat, aber Festgeld geflossen ist,
+          // ist die Festgeld-Treppe das berichtenswerte Ereignis.
+          if (!rebalanceEventNote && rebalanceFromPot2 > 0) {
             rebalanceEventNote = 'Rebalanced aus Festgeld-Treppe';
+          }
+
+          // 3. Notfall-Rebalancing: Nur wenn Topf 1 noch Defizit hat UND Topf 3 leer/gesperrt ist, werden nicht-fällige Festgelder angetastet
+          if (deficit > 0.001) {
+            const nonMature = [...activeFgAccounts].filter(a => a.remainingYears > 0).sort((a, b) => a.remainingYears - b.remainingYears);
+            for (let acc of nonMature) {
+              if (acc.balance > 0 && deficit > 0.001) {
+                const penaltyRate = acc.rate * 0.5 * acc.remainingYears;
+                const maxTake = acc.balance / (1 + penaltyRate);
+                const take = Math.min(maxTake, deficit);
+                const penalty = take * penaltyRate;
+                acc.balance -= (take + penalty);
+                pot1 += take;
+                deficit -= take;
+                rebalanceFromPot2 += take;
+              }
+            }
           }
         }
 
@@ -2099,13 +2279,20 @@
         if (opts.rebalanceStrategy === 'glidepath' && currentAge >= 70 && pot3 > 0) {
           const totalNow = pot1 + getPot2Total() + pot3;
           const shiftAmount = Math.min(pot3, totalNow * 0.005);
-          if (shiftAmount > 1) {
+          if (shiftAmount > 1 && activeFgAccounts.length > 0) {
+            // Umschichtung anteilig auf alle Tranchen, damit die Treppe ihre
+            // Laufzeit-Struktur behaelt (statt willkuerlich ein Konto zu fuellen).
+            let weightSum = activeFgAccounts.reduce((s, a) => s + Math.max(0, a.share), 0);
             pot3 -= shiftAmount;
-            const longestFg = [...activeFgAccounts].sort((a, b) => b.duration - a.duration)[0];
-            if (longestFg) {
-              longestFg.balance += shiftAmount;
-              glidepathNote = 'Gleitpfad (-0,5% ETF)';
+            if (weightSum > 0) {
+              activeFgAccounts.forEach(acc => {
+                acc.balance += shiftAmount * (Math.max(0, acc.share) / weightSum);
+              });
+            } else {
+              const per = shiftAmount / activeFgAccounts.length;
+              activeFgAccounts.forEach(acc => { acc.balance += per; });
             }
+            glidepathNote = 'Gleitpfad (-0,5% ETF)';
           }
         }
 
@@ -2132,15 +2319,15 @@
         } else {
           // Salientes Ereignis für Tabellenanzeige priorisieren
           if (accumulationYears > 0 && isFirstWithdrawalYear && annualWithdrawal > 0) {
-            event = 'Entnahmebeginn';
+            event = (r3 <= -0.15) ? `Entnahmebeginn (Crash ${(r3 * 100).toFixed(0)}%)` : 'Entnahmebeginn';
           } else if (rebalanceEventNote === 'Verkaufsstopp Topf 3 (Baisse)') {
             event = r3 <= -0.15 ? `Crash (${(r3 * 100).toFixed(0)}%) • Verkaufsstopp Topf 3` : 'Verkaufsstopp Topf 3 (Baisse)';
           } else if (r3 <= -0.15) {
-            event = isAccumulating ? `Crash (${(r3 * 100).toFixed(0)}%)` : `Crash (${(r3 * 100).toFixed(0)}%) • Puffer aktiv`;
+            event = `Crash (${(r3 * 100).toFixed(0)}%) • Puffer aktiv`;
           } else if (gkTriggerNote) {
             event = gkTriggerNote;
           } else if (rebalanceEventNote) {
-            event = isAccumulating ? `Ansparphase • ${rebalanceEventNote}` : rebalanceEventNote;
+            event = rebalanceEventNote;
           } else if (glidepathNote) {
             event = glidepathNote;
           }
@@ -2162,9 +2349,9 @@
 
       return {
         params,
-        initialPot1,
-        initialPot2,
-        initialPot3,
+        initialPot1: pot1AtRetirement,
+        initialPot2: pot2AtRetirement,
+        initialPot3: pot3AtRetirement,
         history,
         bankruptYear,
         capitalAtRetirementStart,
@@ -2176,12 +2363,15 @@
     // Schneller deterministischer Zufallszahlengenerator (Mulberry32 PRNG mit Seed)
     function createMulberry32(seed = 42) {
       let a = seed | 0;
-      return function() {
+      const fn = function() {
         a = (a + 0x6D2B79F5) | 0;
         let t = Math.imul(a ^ (a >>> 15), 1 | a);
         t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
         return ((t >>> 0) / 4294967296);
       };
+      fn.getState = () => a;
+      fn.setState = (st) => { a = st; };
+      return fn;
     }
 
     // Box-Muller Normalverteilungs-Zufallsgenerator für Monte-Carlo
@@ -2202,6 +2392,30 @@
       const z5 = sampleStandardNormal(rng);
       const v = z1 * z1 + z2 * z2 + z3 * z3 + z4 * z4 + z5 * z5;
       return z * Math.sqrt(3.0 / Math.max(1e-9, v));
+    }
+
+    // Untergrenze einer Jahresrendite. Bewusst für BEIDE Verteilungsmodelle identisch,
+    // damit ein Wechsel des Modells nur die Form der Verteilung ändert, nicht ihre Grenzen.
+    const MC_RETURN_FLOOR = -0.95;
+    const MC_RETURN_CAP = 2.5;
+
+    // Einziger Renditegenerator für Monte-Carlo (wird für Pfadlauf UND Medianpfad genutzt,
+    // damit beide garantiert identisch sind).
+    // mu = arithmetisches Mittel der Jahresrendite, sigma = Standardabweichung DERSELBEN
+    // Größe. Im Lognormal-Modell ist sigma nicht direkt die Log-Volatilität, deshalb wird
+    // sie umgerechnet: sigmaLog = sqrt(ln(1 + sigma^2 / (1+mu)^2)).
+    function createEtfYieldFn(rng, mu, sigma, useFatTails) {
+      const sigmaLog = Math.sqrt(Math.log(1 + (sigma * sigma) / Math.pow(1 + mu, 2)));
+      const driftLog = Math.log(1 + mu) - 0.5 * sigmaLog * sigmaLog;
+      return function () {
+        let r;
+        if (useFatTails) {
+          r = mu + sigma * sampleStudentT5(rng);
+        } else {
+          r = Math.exp(driftLog + sigmaLog * sampleStandardNormal(rng)) - 1;
+        }
+        return Math.max(MC_RETURN_FLOOR, Math.min(MC_RETURN_CAP, r));
+      };
     }
 
     function simulate(params) {
@@ -2243,7 +2457,7 @@
           crashBannerTitle = 'Stagflation der 1970er aktiv (Inflation bis 11% & Baisse)';
           crashBannerSub = 'Gefährlichste Konstellation: Hohe Inflation treibt Entnahmen, während das ETF-Depot schrumpft';
         } else if (preset === 'systemicCrisis') {
-          crashBannerTitle = 'Systemkrise mit Zinssturz aktiv (-45% Crash & Zinsen auf 0,25%)';
+          crashBannerTitle = 'Systemkrise mit Zinssturz aktiv (-47% Crash & Zinsen auf 0,25%)';
           crashBannerSub = 'Realitätsnah: Nach Markteinbruch senken Zentralbanken die Zinsen; Festgeld-Neuverträge bringen nur 0,5%';
         } else if (preset === 'custom') {
           crashBannerTitle = `Benutzerdefinierter Schock (${(expert.customCrashLoss * 100).toFixed(0)}% in Jahr ${expert.customCrashYear})`;
@@ -2382,23 +2596,19 @@
 
         const allPathsCapitals = Array.from({ length: simYears + 1 }, () => new Float64Array(NUM_PATHS));
         let solventPathsCount = 0;
-        const allPaths = [];
+        const finalTotals = new Float64Array(NUM_PATHS);
+        const pathSeeds = new Int32Array(NUM_PATHS);
 
         for (let p = 0; p < NUM_PATHS; p++) {
-          const etfYieldFn = () => {
-            const z = useFatTails ? sampleStudentT5(rng) : sampleStandardNormal(rng);
-            // Renditeverteilung (mit Student-t fat tails oder lognormal)
-            const r = Math.exp((Math.log(1 + mu) - 0.5 * sigma * sigma) + sigma * z) - 1;
-            return Math.max(-0.90, Math.min(2.5, r));
-          };
-          const pathRes = simulateSinglePath(params, etfYieldFn, expert);
+          pathSeeds[p] = rng.getState();
+          const pathRes = simulateSinglePath(params, createEtfYieldFn(rng, mu, sigma, useFatTails), expert);
           if (pathRes.bankruptYear === null) {
             solventPathsCount++;
           }
           for (let y = 0; y <= simYears; y++) {
             allPathsCapitals[y][p] = pathRes.history[y] ? pathRes.history[y].totalCapital : 0;
           }
-          allPaths.push(pathRes);
+          finalTotals[p] = pathRes.finalTotal;
         }
 
         const successRate = +( (solventPathsCount / NUM_PATHS) * 100 ).toFixed(1);
@@ -2414,19 +2624,33 @@
           p90Curve[y] = sorted[Math.floor(NUM_PATHS * 0.90)];
         }
 
-        // Repräsentativen Pfad finden, der dem 50. Perzentil (Median) am nächsten ist
-        const targetP50Final = p50Curve[simYears];
+        // Repräsentativen Pfad finden: nicht nur der Endwert zählt, sondern der gesamte
+        // Verlauf. Sonst wird - sobald viele Pfade bei 0 enden - ein beliebiger
+        // Pleite-Pfad als "Medianverlauf" gezeichnet.
+        const curveScale = Math.max(1, p50Curve[0]);
         let bestIdx = 0;
         let bestDiff = Infinity;
         for (let p = 0; p < NUM_PATHS; p++) {
-          const diff = Math.abs(allPaths[p].finalTotal - targetP50Final);
+          let diff = 0;
+          for (let y = 1; y <= simYears; y++) {
+            const d = (allPathsCapitals[y][p] - p50Curve[y]) / curveScale;
+            diff += d * d;
+          }
           if (diff < bestDiff) {
             bestDiff = diff;
             bestIdx = p;
           }
         }
-        const representativeMedianPath = allPaths[bestIdx];
+
+        // Gleichen Pfad exakt reproduzieren: identischer RNG-Zustand + identischer Generator.
+        rng.setState(pathSeeds[bestIdx]);
+        const representativeMedianPath = simulateSinglePath(
+          params, createEtfYieldFn(rng, mu, sigma, useFatTails), expert
+        );
         const calcDurationMs = Math.round(performance.now() - startTime);
+        // Implizite geometrische Rendite (Median-Wachstum) zur Einordnung im UI:
+        // Bei gegebenem arithmetischem Mittel mu wächst der Medianpfad nur mit ~mu - sigma^2/2.
+        const impliedGeometric = Math.exp(Math.log(1 + mu) - 0.5 * Math.log(1 + (sigma * sigma) / Math.pow(1 + mu, 2))) - 1;
 
         return {
           ...representativeMedianPath,
@@ -2440,6 +2664,8 @@
           p50Curve: Array.from(p50Curve),
           p90Curve: Array.from(p90Curve),
           volatility: sigma,
+          mcArithmeticReturn: mu,
+          mcGeometricReturn: impliedGeometric,
           mcPaths: NUM_PATHS,
           mcDistributionTitle: distTitle,
           mcCalcMs: calcDurationMs,
@@ -2459,15 +2685,19 @@
       // 1. Textanzeigen & Mini-Bar in linker Spalte
       const accYears = params.accumulationYears || 0;
       
-      const remaining = Math.max(0, (initialPot1 + initialPot2 + initialPot3) - initialPot1);
-      document.getElementById('remainingCapitalVal').textContent = currencyFmt.format(remaining);
-      document.getElementById('initialPot1Val').textContent = currencyFmt.format(initialPot1);
-      document.getElementById('initialPot2Val').textContent = currencyFmt.format(initialPot2);
-      document.getElementById('initialPot3Val').textContent = currencyFmt.format(initialPot3);
+      const dispPot1 = initialPot1;
+      const dispPot2 = initialPot2;
+      const dispPot3 = initialPot3;
+      const dispRem = dispPot2 + dispPot3;
 
-      document.getElementById('labelSummaryPot1').textContent = currencyFmt.format(initialPot1);
-      document.getElementById('labelSummaryPot2').textContent = currencyFmt.format(initialPot2);
-      document.getElementById('labelSummaryPot3').textContent = currencyFmt.format(initialPot3);
+      document.getElementById('remainingCapitalVal').textContent = currencyFmt.format(dispRem);
+      document.getElementById('initialPot1Val').textContent = currencyFmt.format(dispPot1);
+      document.getElementById('initialPot2Val').textContent = currencyFmt.format(dispPot2);
+      document.getElementById('initialPot3Val').textContent = currencyFmt.format(dispPot3);
+
+      document.getElementById('labelSummaryPot1').textContent = currencyFmt.format(dispPot1);
+      document.getElementById('labelSummaryPot2').textContent = currencyFmt.format(dispPot2);
+      document.getElementById('labelSummaryPot3').textContent = currencyFmt.format(dispPot3);
 
       const accBadge = document.getElementById('accumulationBadge');
       const accInfo = document.getElementById('accumulationInfoText');
@@ -2512,7 +2742,7 @@
           const estMonthlyAtStart = Math.round(params.monthlyWithdrawal * estInflFactor);
           withInfoElem.innerHTML = `
             <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            <span>Start in Jahr ${accYears + 1} (Alter ${params.startAge + accYears + 1}) mit ca. <strong>${currencyFmt.format(estMonthlyAtStart)}</strong>/Mo. (inflationsbereinigt)</span>
+            <span>Start in Jahr ${accYears + 1} (Alter ${params.startAge + accYears + 1}) mit ca. <strong>${currencyFmt.format(estMonthlyAtStart)}</strong>/Mo. – nominal, damit die Kaufkraft von ${currencyFmt.format(params.monthlyWithdrawal)} erhalten bleibt</span>
           `;
         } else {
           withInfoElem.innerHTML = `
@@ -2522,18 +2752,24 @@
         }
       }
 
-      // Erklärung Topf 1
-      document.getElementById('pot1Explanation').textContent = `(${params.pot1Months} × ${currencyFmt.format(params.monthlyWithdrawal)})`;
+      // Erklärung Topf 1: Nach einer Ansparphase wird der Puffer aus der bis dahin
+      // aufgelaufenen (nominal höheren) Monatsentnahme gebildet.
+      const pot1BasisMonthly = accYears > 0
+        ? params.monthlyWithdrawal * Math.pow(1 + params.inflationRate, accYears)
+        : params.monthlyWithdrawal;
+      document.getElementById('pot1Explanation').textContent = `(${params.pot1Months} × ${currencyFmt.format(pot1BasisMonthly)})`;
 
       // Topf 3 %-Label
       const pot3SharePct = Math.round((1 - params.pot2Share) * 100);
       document.getElementById('pot3ShareLabel').textContent = `${pot3SharePct} % Rest`;
 
-      // Mini-Bar Aufteilung in %
-      const totalInitial = params.startCapital || 1;
-      const p1Pct = (initialPot1 / totalInitial) * 100;
-      const p2Pct = (initialPot2 / totalInitial) * 100;
-      const p3Pct = (initialPot3 / totalInitial) * 100;
+      // Mini-Bar Aufteilung in %: Bezugsgröße ist die Summe der drei Töpfe zum
+      // Entnahmestart. Nach einer Ansparphase ist die deutlich größer als das
+      // Startkapital - danach zu teilen ergäbe Balken über 100 %.
+      const totalInitial = (dispPot1 + dispPot2 + dispPot3) || 1;
+      const p1Pct = (dispPot1 / totalInitial) * 100;
+      const p2Pct = (dispPot2 / totalInitial) * 100;
+      const p3Pct = (dispPot3 / totalInitial) * 100;
 
       document.getElementById('barPot1').style.width = `${p1Pct}%`;
       document.getElementById('barPot2').style.width = `${p2Pct}%`;
@@ -2574,6 +2810,9 @@
       const endCapitalElem = document.getElementById('kpiEndCapitalValue');
       endCapitalElem.textContent = currencyFmt.format(finalTotal);
       if (results.capitalAtRetirementStart !== null && results.capitalAtRetirementStart !== undefined) {
+        endCapitalElem.className = finalTotal > 0
+          ? 'text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight'
+          : 'text-lg sm:text-xl font-extrabold text-slate-400 tracking-tight';
         document.getElementById('kpiEndCapitalSub').innerHTML = `
           Bei Entnahmebeginn: <strong class="text-indigo-700 font-semibold">${currencyFmt.format(results.capitalAtRetirementStart)}</strong>
           <span class="block text-[10px] text-slate-500">Endstand: ${currencyFmt.format(finalTotal)}</span>
@@ -2654,6 +2893,19 @@
         const volDisp = document.getElementById('mcVolDisplay');
         if (volDisp) volDisp.textContent = `${(results.volatility * 100).toFixed(1).replace('.', ',')} %`;
 
+        const retExplainer = document.getElementById('mcReturnExplainer');
+        if (retExplainer && results.mcGeometricReturn !== undefined) {
+          const ar = (results.mcArithmeticReturn * 100).toFixed(1).replace('.', ',');
+          const gr = (results.mcGeometricReturn * 100).toFixed(1).replace('.', ',');
+          retExplainer.innerHTML = `Die eingestellten <strong class="text-white">${ar} %</strong> sind der Durchschnitt über alle Jahre. Durch die Schwankung wächst der mittlere Pfad nur mit rund <strong class="text-white">${gr} %</strong> p.a. – deshalb fällt das Monte-Carlo-Ergebnis niedriger aus als die Rechnung mit konstanter Rendite.`;
+        }
+
+        const hwBadge = document.getElementById('mcHardwareBadge');
+        if (hwBadge) {
+          const cores = (navigator.hardwareConcurrency || 0);
+          hwBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>${results.mcPaths.toLocaleString('de-DE')} Pfade × ${results.params.simulationYears} Jahre${cores ? ` • ${cores} Kerne` : ''}</span>`;
+        }
+
         const p10Elem = document.getElementById('mcP10Value');
         if (p10Elem) p10Elem.textContent = currencyFmt.format(results.mcP10);
         const p50Elem = document.getElementById('mcP50Value');
@@ -2665,7 +2917,7 @@
         if (pathsBannerElem) pathsBannerElem.textContent = (results.mcPaths || 1000).toLocaleString('de-DE');
 
         const calcTimeElem = document.getElementById('mcCalcTimeBadge');
-        if (calcTimeElem) calcTimeElem.textContent = `⚡ Berechnet in ${results.mcCalcMs || 8} ms`;
+        if (calcTimeElem) calcTimeElem.textContent = `⚡ Berechnet in ${results.mcCalcMs} ms`;
 
         const seedBadgeElem = document.getElementById('mcSeedBadge');
         if (seedBadgeElem) {
@@ -2755,7 +3007,7 @@
       const btnW = document.getElementById('btnToggleWithdrawals');
       if (btnW) {
         if (showWithdrawalsLine) {
-          btnW.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
+          btnW.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5 shadow-sm cursor-pointer';
           btnW.innerHTML = '<span class="w-3.5 h-0.5 border-t-2 border-dashed border-rose-500 inline-block"></span><span>Entnahmen</span>';
         } else {
           btnW.className = 'px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-400 border border-slate-200 hover:bg-slate-200 transition flex items-center gap-1.5 cursor-pointer opacity-70';
@@ -2767,12 +3019,12 @@
       if (btnP) {
         if (showPercentilesLines) {
           btnP.classList.remove('bg-slate-100', 'text-slate-400', 'border-slate-200', 'hover:bg-slate-200', 'opacity-70', 'font-medium');
-          btnP.classList.add('bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'hover:bg-indigo-100', 'font-semibold', 'shadow-2xs');
-          btnP.innerHTML = '<span class="w-3.5 h-1.5 rounded-xs bg-indigo-200 border border-indigo-500 border-dashed inline-block"></span><span>10./90. Perzentil</span>';
+          btnP.classList.add('bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'hover:bg-indigo-100', 'font-semibold', 'shadow-sm');
+          btnP.innerHTML = '<span class="w-3.5 h-1.5 rounded-sm bg-indigo-200 border border-indigo-500 border-dashed inline-block"></span><span>10./90. Perzentil</span>';
         } else {
-          btnP.classList.remove('bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'hover:bg-indigo-100', 'font-semibold', 'shadow-2xs');
+          btnP.classList.remove('bg-indigo-50', 'text-indigo-700', 'border-indigo-200', 'hover:bg-indigo-100', 'font-semibold', 'shadow-sm');
           btnP.classList.add('bg-slate-100', 'text-slate-400', 'border-slate-200', 'hover:bg-slate-200', 'opacity-70', 'font-medium');
-          btnP.innerHTML = '<span class="w-3.5 h-1.5 rounded-xs bg-slate-200 border border-slate-400 inline-block"></span><span class="line-through">10./90. Perzentil</span>';
+          btnP.innerHTML = '<span class="w-3.5 h-1.5 rounded-sm bg-slate-200 border border-slate-400 inline-block"></span><span class="line-through">10./90. Perzentil</span>';
         }
       }
     }
@@ -2795,10 +3047,6 @@
       const chartYMax = Math.ceil(Math.max(maxWealth, maxWithdrawal) * 1.08);
 
       const ctx = document.getElementById('simulationChart').getContext('2d');
-
-      if (simulationChart) {
-        simulationChart.destroy();
-      }
 
       const datasets = [
         {
@@ -2891,6 +3139,13 @@
         });
       }
 
+      // Chart.js wirft "Canvas is already in use", wenn auf demselben Canvas ein zweites
+      // Diagramm erzeugt wird. Ohne dieses destroy() bricht jede Neuberechnung ab.
+      if (simulationChart) {
+        simulationChart.destroy();
+        simulationChart = null;
+      }
+
       simulationChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -2934,7 +3189,7 @@
                   const item = history[idx];
                   if (!item) return '';
                   return [
-                    `💰 GESAMTVERMÖGEN (Median): ${currencyFmt.format(item.totalCapital)}`,
+                    `💰 GESAMTVERMÖGEN: ${currencyFmt.format(item.totalCapital)}`,
                     `   (Summe der 3 Töpfe zu diesem Zeitpunkt)`,
                     `────────────────────────────────────────`
                   ];
@@ -3036,6 +3291,7 @@
           }
         }
       });
+      animateNextChart = false;
     }
 
     // --- 6. DETAIL-TABELLE RENDERING ---
@@ -3063,7 +3319,7 @@
           badgeClass = 'bg-purple-100 text-purple-700 border border-purple-200 font-semibold';
         } else if (row.event.includes('Festgeld') || row.event.includes('Gleitpfad')) {
           badgeClass = 'bg-emerald-100 text-emerald-700 border border-emerald-200';
-        } else if (row.event === 'Start') {
+        } else if (row.event.startsWith('Start')) {
           badgeClass = 'bg-blue-100 text-blue-700 border border-blue-200';
         }
 
@@ -3116,7 +3372,7 @@
     function exportToCSV() {
       if (!currentSimulationData || !currentSimulationData.history) return;
 
-      const headers = ['Jahr', 'Alter', 'Jahresentnahme (EUR)', 'Topf 1 Tagesgeld (EUR)', 'Topf 2 Festgeld (EUR)', 'Topf 3 ETF (EUR)', 'Gesamtvermoegen (EUR)', 'Status'];
+      const headers = ['Jahr', 'Alter', 'Geplante Entnahme (EUR)', 'Tatsaechliche Entnahme (EUR)', 'Deckungsluecke (EUR)', 'Topf 1 Tagesgeld (EUR)', 'Topf 2 Festgeld (EUR)', 'Topf 3 ETF (EUR)', 'Gesamtvermoegen (EUR)', 'Status'];
 
       const escapeCSV = (field) => {
         const str = String(field ?? '');
@@ -3131,10 +3387,17 @@
       ];
 
       currentSimulationData.history.forEach(h => {
+        // Geplant vs. tatsächlich weichen nur voneinander ab, wenn das Kapital nicht
+        // ausreicht, um die geplante Entnahme vollständig zu decken (Deckungslücke > 0).
+        const planned = Math.round(h.annualWithdrawal || 0);
+        const actual = Math.round(h.actualWithdrawal || 0);
+        const shortfall = Math.max(0, planned - actual);
         rows.push([
           escapeCSV(h.year),
           escapeCSV(h.age),
-          escapeCSV(Math.round(h.annualWithdrawal)),
+          escapeCSV(planned),
+          escapeCSV(actual),
+          escapeCSV(shortfall),
           escapeCSV(Math.round(h.pot1)),
           escapeCSV(Math.round(h.pot2)),
           escapeCSV(Math.round(h.pot3)),
@@ -3215,7 +3478,14 @@
       try {
         const jsonStr = JSON.stringify(state);
         const hash = btoa(encodeURIComponent(jsonStr));
-        window.location.hash = 'cfg=' + hash;
+        // history.replaceState aktualisiert die Adresszeile, OHNE ein 'hashchange'-
+        // Event auszulösen (anders als eine Zuweisung an window.location.hash).
+        // Dadurch entfällt jede Notwendigkeit für ein Guard-Flag - und damit auch
+        // dessen Schwachstelle: Bei zwei Speicherungen mit UNVERÄNDERTEN Werten wäre
+        // der neue Hash identisch zum alten, 'hashchange' würde gar nicht feuern,
+        // und ein Flag-basierter Ansatz bliebe auf 'true' hängen und würde die
+        // nächste echte hashchange-Navigation (z. B. Zurück-Button) verschlucken.
+        history.replaceState(null, '', '#cfg=' + hash);
 
         const fullUrl = window.location.href;
 
@@ -3309,22 +3579,14 @@
         }
 
         // Experten-Optionen wiederherstellen
-        if (state.mm) {
-          const el = document.getElementById('marketModeSelect');
-          if (el) el.value = state.mm;
-        }
-        if (state.cp) {
-          const el = document.getElementById('crashPresetSelect');
-          if (el) el.value = state.cp;
-        }
-        if (state.cy !== undefined) {
-          const el = document.getElementById('customCrashYear');
-          if (el) el.value = state.cy;
-        }
-        if (state.cl !== undefined) {
-          const el = document.getElementById('customCrashLoss');
-          if (el) el.value = state.cl;
-        }
+        const elMM = document.getElementById('marketModeSelect');
+        if (elMM) elMM.value = state.mm || 'deterministic';
+        const elCP = document.getElementById('crashPresetSelect');
+        if (elCP) elCP.value = state.cp || 'finanzkrise2008';
+        const elCY = document.getElementById('customCrashYear');
+        if (elCY) elCY.value = state.cy !== undefined ? state.cy : 1;
+        const elCL = document.getElementById('customCrashLoss');
+        if (elCL) elCL.value = state.cl !== undefined ? state.cl : -35;
         if (state.vol !== undefined) {
           const inp = document.getElementById('volatilityInput');
           const sld = document.getElementById('volatilitySlider');
@@ -3345,14 +3607,12 @@
             }
           }
         }
-        if (state.mcsm) {
-          const sel = document.getElementById('mcSeedModeSelect');
-          if (sel) sel.value = state.mcsm;
-          const container = document.getElementById('mcSeedCustomContainer');
-          if (container) {
-            if (state.mcsm === 'random') container.classList.add('hidden');
-            else container.classList.remove('hidden');
-          }
+        const elMCSM = document.getElementById('mcSeedModeSelect');
+        if (elMCSM) elMCSM.value = state.mcsm || 'fixed';
+        const container = document.getElementById('mcSeedCustomContainer');
+        if (container) {
+          if ((state.mcsm || 'fixed') === 'random') container.classList.add('hidden');
+          else container.classList.remove('hidden');
         }
         if (state.mcs !== undefined) {
           const inp = document.getElementById('mcSeedInput');
@@ -3372,10 +3632,8 @@
           const el = document.getElementById('correlateInterestToggle');
           if (el) el.checked = false;
         }
-        if (state.ws) {
-          const el = document.getElementById('withdrawalStrategySelect');
-          if (el) el.value = state.ws;
-        }
+        const elWS = document.getElementById('withdrawalStrategySelect');
+        if (elWS) elWS.value = state.ws || 'fixedInflation';
         if (state.wpr !== undefined) {
           const el = document.getElementById('withdrawalPercentRate');
           if (el) el.value = state.wpr;
@@ -3388,10 +3646,8 @@
           const el = document.getElementById('withdrawalCap');
           if (el) el.value = state.wc;
         }
-        if (state.rs) {
-          const el = document.getElementById('rebalanceStrategySelect');
-          if (el) el.value = state.rs;
-        }
+        const elRS = document.getElementById('rebalanceStrategySelect');
+        if (elRS) elRS.value = state.rs || 'annualCascade';
 
         renderFestgeldList();
         animateNextChart = true;
@@ -3434,12 +3690,23 @@
       }
     }
 
+    // Icons nur rendern, wenn die Bibliothek wirklich geladen ist. Ein blockierter
+    // oder fehlgeschlagener CDN-Aufruf darf die Anwendung nicht mitreißen.
+    function renderIcons(root) {
+      try {
+        if (typeof lucide === 'undefined' || !lucide.createIcons) return;
+        root ? lucide.createIcons({ root }) : lucide.createIcons();
+      } catch (e) {
+        console.warn('Icons konnten nicht gezeichnet werden:', e);
+      }
+    }
+
     function openModal(id) {
       const el = document.getElementById(id);
       if (el) {
         el.classList.remove('hidden');
         el.classList.add('flex');
-        lucide.createIcons({ root: el });
+        renderIcons(el);
       }
     }
 
@@ -3450,6 +3717,23 @@
         el.classList.remove('flex');
       }
     }
+
+    function closeAllModals() {
+      ['saveModal', 'loadModal'].forEach(closeModal);
+    }
+
+    // Escape schließt Dialoge, ein Klick auf den abgedunkelten Hintergrund ebenfalls.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAllModals();
+    });
+    ['saveModal', 'loadModal'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('mousedown', (e) => {
+          if (e.target === el) closeModal(id);
+        });
+      }
+    });
 
     let toastTimer = null;
     function showToast(msg, type = 'success') {
@@ -3478,20 +3762,54 @@
     }
 
     // --- 8. BERECHNUNG ANSTOSSEN ---
-    function runSimulation() {
-      const params = getInputs();
-      currentSimulationData = simulate(params);
-      updateUI(currentSimulationData);
+    // Schwellenwert, ab dem eine Monte-Carlo-Berechnung als "schwer" gilt (Pfade × Jahre).
+    // Bei 2.500 Pfaden × 40 Jahren = 100.000 ist ein synchroner Lauf noch unter ~200ms;
+    // darüber lohnt sich die sichtbare "Berechne..."-Rückmeldung.
+    const MC_HEAVY_THRESHOLD = 100000;
+
+    function isHeavyMonteCarloConfig() {
+      const marketMode = document.getElementById('marketModeSelect')?.value;
+      if (marketMode !== 'monteCarlo') return false;
+      const paths = parseInt(document.getElementById('mcPathsInput')?.value) || 1000;
+      const simYears = parseInt(document.getElementById('simulationYearsInput')?.value) || 30;
+      return paths * simYears > MC_HEAVY_THRESHOLD;
     }
 
-    function debouncedRunSimulation() {
-      if (!rafPending) {
-        rafPending = true;
+    function showCalculating(show) {
+      const el = document.getElementById('calculatingOverlay');
+      if (el) el.classList.toggle('hidden', !show);
+    }
+
+    function runSimulation() {
+      const params = getInputs();
+
+      if (isHeavyMonteCarloConfig()) {
+        showCalculating(true);
+        // Der eigentliche Rechenlauf ist synchron und blockiert den Main-Thread.
+        // Zwei verschachtelte Yields (rAF + setTimeout 0) geben dem Browser die
+        // Chance, das Overlay VOR dem Block tatsächlich zu zeichnen.
         requestAnimationFrame(() => {
-          runSimulation();
-          rafPending = false;
+          setTimeout(() => {
+            currentSimulationData = simulate(params);
+            updateUI(currentSimulationData);
+            showCalculating(false);
+          }, 0);
         });
+      } else {
+        currentSimulationData = simulate(params);
+        updateUI(currentSimulationData);
       }
+    }
+
+    let debounceTimer = null;
+    function debouncedRunSimulation() {
+      clearTimeout(debounceTimer);
+      // Schwere Monte-Carlo-Konfigurationen bekommen eine längere Wartezeit, damit
+      // ein gezogener Regler nicht bei jedem Zwischenschritt einen teuren Lauf auslöst.
+      const delay = isHeavyMonteCarloConfig() ? 500 : 150;
+      debounceTimer = setTimeout(() => {
+        runSimulation();
+      }, delay);
     }
 
     // --- 9. DOM CONTENT LOADED INITIALISIERUNG ---
@@ -3500,15 +3818,19 @@
       initFestgeldListeners();
 
       // Bindings für Schieberegler und Inputfelder (mit rAF Debouncing)
-      bindSync('startCapital', 'startCapitalInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
-      bindSync('monthlyWithdrawal', 'monthlyWithdrawalInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
-      bindSync('inflationRate', 'inflationRateInput', debouncedRunSimulation);
-      bindSync('pot1Months', 'pot1MonthsInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
-      bindSync('pot2Share', 'pot2ShareInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
+      bindSync('startCapital', 'startCapitalInput', () => { renderFestgeldList();
+      debouncedRunSimulation(); });
+      bindSync('monthlyWithdrawal', 'monthlyWithdrawalInput', () => { renderFestgeldList();
+      debouncedRunSimulation(); });
+      bindSync('inflationRate', 'inflationRateInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
+      bindSync('pot1Months', 'pot1MonthsInput', () => { renderFestgeldList();
+      debouncedRunSimulation(); });
+      bindSync('pot2Share', 'pot2ShareInput', () => { renderFestgeldList();
+      debouncedRunSimulation(); });
       bindSync('returnPot1', 'returnPot1Input', debouncedRunSimulation);
-      bindSync('returnPot3', 'returnPot3Input', debouncedRunSimulation);
+      bindSync('returnPot3', 'returnPot3Input', () => { renderFestgeldList(); debouncedRunSimulation(); });
       bindSync('simulationYears', 'simulationYearsInput', debouncedRunSimulation);
-      bindSync('accumulationYears', 'accumulationYearsInput', () => {
+      bindSync('accumulationYears', 'accumulationYearsInput', () => { renderFestgeldList();
         const syInput = document.getElementById('simulationYearsInput');
         const sySlider = document.getElementById('simulationYears');
         const curAcc = parseInt(document.getElementById('accumulationYearsInput').value) || 0;
@@ -3519,7 +3841,7 @@
         }
         debouncedRunSimulation();
       });
-      bindSync('monthlySavings', 'monthlySavingsInput', debouncedRunSimulation);
+      bindSync('monthlySavings', 'monthlySavingsInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
 
       document.getElementById('startAge').addEventListener('input', debouncedRunSimulation);
 
@@ -3534,7 +3856,9 @@
         onExpertOptionChange();
       }
 
-      // Bei Hash-Änderung in der Adressleiste (z. B. Vor/Zurück im Browser)
+      // Bei Hash-Änderung in der Adressleiste (z. B. Vor/Zurück im Browser).
+      // saveToHash() selbst löst dank history.replaceState() kein hashchange aus,
+      // daher landen hier ausschließlich externe Änderungen (Navigation, eingefügter Link).
       window.addEventListener('hashchange', () => {
         if (window.location.hash && window.location.hash.includes('cfg=')) {
           loadFromHash(window.location.hash);
@@ -3542,7 +3866,7 @@
       });
 
       // Lucide Icons einmalig für statische UI-Elemente initialisieren
-      lucide.createIcons();
+      renderIcons();
     });
   </script>
 </body>

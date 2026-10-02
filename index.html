@@ -318,7 +318,7 @@
             <input type="range" id="pot1Months" min="0" max="60" step="1" value="24"
               class="w-full h-2 bg-blue-200 rounded-lg cursor-pointer accent-blue-600">
             <div class="flex justify-between items-center pt-1 border-t border-blue-100">
-              <label for="pot1MinAmountInput" class="text-xs text-blue-800 font-medium">Mindest-Puffer (fest):</label>
+              <label for="pot1MinAmountInput" class="text-xs text-blue-800 font-medium">Fester Betrag (optional):</label>
               <div class="flex items-center gap-1">
                 <input type="number" id="pot1MinAmountInput" min="0" max="200000" step="1000" value="0"
                   class="w-20 text-right font-bold text-blue-900 bg-white border border-blue-200 rounded-lg px-2 py-0.5 text-xs focus:ring-2 focus:ring-blue-500">
@@ -1634,12 +1634,19 @@
       let estCapital = params.startCapital;
       let estMonthly = params.monthlyWithdrawal;
 
-      const initialPot1 = Math.min(estCapital, Math.max(params.pot1MinAmount || 0, params.pot1Months * estMonthly));
+      let initialPot1 = params.pot1Months * estMonthly;
+      if ((params.pot1MinAmount || 0) > 0) {
+        initialPot1 = params.pot1MinAmount;
+      }
+      initialPot1 = Math.min(estCapital, initialPot1);
       const remainingCapital = Math.max(0, estCapital - initialPot1);
       
       let initialPot2 = remainingCapital * params.pot2Share;
       if (params.pot2Amount > 0) {
         initialPot2 = Math.min(remainingCapital, params.pot2Amount);
+      }
+      if (festgeldAccounts.length === 0) {
+        initialPot2 = 0;
       }
 
       const totalShareRaw = festgeldAccounts.reduce((sum, a) => sum + (parseFloat(a.share) || 0), 0);
@@ -1925,11 +1932,18 @@
       // Die Kapitalaufteilung erfolgt nun IMMER auf Basis der aktuellen User-Eingaben
       // (auch vor einer Ansparphase), da der Nutzer seinen Puffer explizit jetzt setzen will.
       const startMonthlyWithdrawal = accumulationYears > 0 ? (monthlyWithdrawal * Math.pow(1 + inflationRate, accumulationYears)) : monthlyWithdrawal;
-      initialPot1 = Math.min(startCapital, Math.max(params.pot1MinAmount || 0, pot1Months * startMonthlyWithdrawal));
+      initialPot1 = params.pot1Months * startMonthlyWithdrawal;
+      if ((params.pot1MinAmount || 0) > 0) {
+        initialPot1 = params.pot1MinAmount;
+      }
+      initialPot1 = Math.min(startCapital, initialPot1);
       const remainingCapital = Math.max(0, startCapital - initialPot1);
       initialPot2 = remainingCapital * pot2Share;
       if (params.pot2Amount > 0) {
         initialPot2 = Math.min(remainingCapital, params.pot2Amount);
+      }
+      if (festgeldAccounts.length === 0) {
+        initialPot2 = 0;
       }
       initialPot3 = remainingCapital - initialPot2;
 
@@ -2311,8 +2325,8 @@
               activeFgAccounts.forEach(acc => {
                 acc.balance += shiftAmount * (Math.max(0, acc.share) / weightSum);
               });
-            } else {
-              const per = shiftAmount / activeFgAccounts.length;
+            } else if (activeFgAccounts.length > 0) {
+                const per = shiftAmount / activeFgAccounts.length;
               activeFgAccounts.forEach(acc => { acc.balance += per; });
             }
             glidepathNote = 'Gleitpfad (-0,5% ETF)';
@@ -2813,6 +2827,9 @@
       
       // Visual Syncing: % Sliders and Euro inputs
       const p1AmtInput = document.getElementById('pot1MinAmountInput');
+      const p1Slider = document.getElementById('pot1Months');
+      const p1Input = document.getElementById('pot1MonthsInput');
+
       if (p1AmtInput && document.activeElement !== p1AmtInput) {
         if (params.pot1MinAmount > 0) {
           p1AmtInput.value = params.pot1MinAmount;
@@ -2820,6 +2837,13 @@
           p1AmtInput.value = '';
           p1AmtInput.placeholder = Math.round(dispPot1).toString();
         }
+      }
+
+      if (params.pot1MinAmount > 0 && pot1BasisMonthly > 0) {
+        let actualPot1Months = Math.round(dispPot1 / pot1BasisMonthly);
+        if (actualPot1Months > 60) actualPot1Months = 60;
+        if (p1Slider) p1Slider.value = actualPot1Months;
+        if (p1Input && document.activeElement !== p1Input) p1Input.value = actualPot1Months;
       }
 
       const p2AmtInput = document.getElementById('pot2AmountInput');
@@ -3910,8 +3934,12 @@
       bindSync('monthlyWithdrawal', 'monthlyWithdrawalInput', () => { renderFestgeldList();
       debouncedRunSimulation(); });
       bindSync('inflationRate', 'inflationRateInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
-      bindSync('pot1Months', 'pot1MonthsInput', () => { renderFestgeldList();
-      debouncedRunSimulation(); });
+      bindSync('pot1Months', 'pot1MonthsInput', () => { 
+        const p1Amt = document.getElementById('pot1MinAmountInput');
+        if (p1Amt && document.activeElement !== p1Amt) p1Amt.value = '';
+        renderFestgeldList();
+        debouncedRunSimulation(); 
+      });
       bindSync('pot2Share', 'pot2ShareInput', () => { 
         const p2Amt = document.getElementById('pot2AmountInput');
         if (p2Amt && document.activeElement !== p2Amt) p2Amt.value = '';

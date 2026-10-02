@@ -277,6 +277,10 @@
             </h2>
             <span id="potCoverageBadge" class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">100% Gedeckt</span>
           </div>
+          
+          <div id="capitalWarningBanner" class="hidden bg-amber-50 border-l-4 border-amber-500 text-amber-800 p-3 text-xs font-medium rounded shadow-sm">
+            <!-- Warning text goes here -->
+          </div>
 
           <!-- Mini Visuelle Vorschau der Töpfe -->
           <div class="space-y-1.5">
@@ -2782,9 +2786,59 @@
         document.getElementById('pot1Explanation').textContent = `(${params.pot1Months} × ${currencyFmt.format(pot1BasisMonthly)})`;
       }
 
-      // Topf 3 %-Label
-      const pot3SharePct = Math.round((1 - params.pot2Share) * 100);
-      document.getElementById('pot3ShareLabel').textContent = `${pot3SharePct} % Rest`;
+      // Capital Warning Banner
+      const warningBanner = document.getElementById('capitalWarningBanner');
+      if (warningBanner) {
+        const requestedPot1 = Math.max(params.pot1MinAmount || 0, params.pot1Months * (params.accumulationYears > 0 ? (params.monthlyWithdrawal * Math.pow(1 + params.inflationRate, params.accumulationYears)) : params.monthlyWithdrawal));
+        const requestedPot2 = params.pot2Amount || 0;
+        const totalRequested = requestedPot1 + requestedPot2;
+        if (totalRequested > params.startCapital) {
+          warningBanner.classList.remove('hidden');
+          warningBanner.textContent = `Achtung: Deine festen Vorgaben (${currencyFmt.format(totalRequested)}) übersteigen das Startkapital (${currencyFmt.format(params.startCapital)}). Die Töpfe wurden gekappt!`;
+        } else {
+          warningBanner.classList.add('hidden');
+        }
+      }
+
+      // Topf 3 %-Label und Topf 2 Slider Sync (visuell)
+      const remCap = dispPot2 + dispPot3;
+      let actualPot2Pct = 0;
+      let actualPot3Pct = 100;
+      if (remCap > 0) {
+        actualPot2Pct = Math.round((dispPot2 / remCap) * 100);
+        actualPot3Pct = 100 - actualPot2Pct;
+      }
+      
+      document.getElementById('pot3ShareLabel').textContent = `${actualPot3Pct} % Rest`;
+      
+      // Visual Syncing: % Sliders and Euro inputs
+      const p1AmtInput = document.getElementById('pot1MinAmountInput');
+      if (p1AmtInput && document.activeElement !== p1AmtInput) {
+        if (params.pot1MinAmount > 0) {
+          p1AmtInput.value = params.pot1MinAmount;
+        } else {
+          p1AmtInput.value = '';
+          p1AmtInput.placeholder = Math.round(dispPot1).toString();
+        }
+      }
+
+      const p2AmtInput = document.getElementById('pot2AmountInput');
+      const p2Slider = document.getElementById('pot2Share');
+      const p2Input = document.getElementById('pot2ShareInput');
+
+      if (p2AmtInput && document.activeElement !== p2AmtInput) {
+        if (params.pot2Amount > 0) {
+          p2AmtInput.value = params.pot2Amount;
+        } else {
+          p2AmtInput.value = '';
+          p2AmtInput.placeholder = Math.round(dispPot2).toString();
+        }
+      }
+
+      if (params.pot2Amount > 0) {
+        if (p2Slider) p2Slider.value = actualPot2Pct;
+        if (p2Input && document.activeElement !== p2Input) p2Input.value = actualPot2Pct;
+      }
 
       // Mini-Bar Aufteilung in %: Bezugsgröße ist die Summe der drei Töpfe zum
       // Entnahmestart. Nach einer Ansparphase ist die deutlich größer als das
@@ -3858,8 +3912,12 @@
       bindSync('inflationRate', 'inflationRateInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
       bindSync('pot1Months', 'pot1MonthsInput', () => { renderFestgeldList();
       debouncedRunSimulation(); });
-      bindSync('pot2Share', 'pot2ShareInput', () => { renderFestgeldList();
-      debouncedRunSimulation(); });
+      bindSync('pot2Share', 'pot2ShareInput', () => { 
+        const p2Amt = document.getElementById('pot2AmountInput');
+        if (p2Amt && document.activeElement !== p2Amt) p2Amt.value = '';
+        renderFestgeldList();
+        debouncedRunSimulation(); 
+      });
       bindSync('returnPot1', 'returnPot1Input', debouncedRunSimulation);
       bindSync('returnPot3', 'returnPot3Input', () => { renderFestgeldList(); debouncedRunSimulation(); });
       bindSync('simulationYears', 'simulationYearsInput', debouncedRunSimulation);

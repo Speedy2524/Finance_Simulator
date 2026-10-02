@@ -299,7 +299,7 @@
           </div>
 
           <!-- Topf 1: Tagesgeld Puffer (in Monaten) -->
-          <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-1.5">
+          <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2">
             <div class="flex justify-between items-center text-sm">
               <label for="pot1Months" class="font-medium text-blue-900 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-blue-600"></span>
@@ -313,8 +313,16 @@
             </div>
             <input type="range" id="pot1Months" min="0" max="60" step="1" value="24"
               class="w-full h-2 bg-blue-200 rounded-lg cursor-pointer accent-blue-600">
-            <div class="flex justify-between items-center text-xs text-blue-800">
-              <span>Initialer Betrag: <strong id="initialPot1Val">0 €</strong></span>
+            <div class="flex justify-between items-center pt-1 border-t border-blue-100">
+              <label for="pot1MinAmountInput" class="text-xs text-blue-800 font-medium">Mindest-Puffer (fest):</label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="pot1MinAmountInput" min="0" max="200000" step="1000" value="0"
+                  class="w-20 text-right font-bold text-blue-900 bg-white border border-blue-200 rounded-lg px-2 py-0.5 text-xs focus:ring-2 focus:ring-blue-500">
+                <span class="text-[10px] font-semibold text-blue-700">€</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center text-xs text-blue-800 pt-1">
+              <span>Startwert Topf 1: <strong id="initialPot1Val">0 €</strong></span>
               <span class="text-[11px] text-blue-600" id="pot1Explanation">(24 × 0 €)</span>
             </div>
           </div>
@@ -341,7 +349,17 @@
               </div>
               <input type="range" id="pot2Share" min="0" max="100" step="1" value="80"
                 class="w-full h-2 bg-emerald-200 rounded-lg cursor-pointer accent-emerald-600">
-              <div class="flex justify-between items-center text-xs text-emerald-800">
+              
+              <div class="flex justify-between items-center pt-1 border-t border-emerald-100">
+                <label for="pot2AmountInput" class="text-xs text-emerald-800 font-medium">Fester Betrag (optional):</label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="pot2AmountInput" min="0" max="1000000" step="1000" value="0" placeholder="0"
+                    class="w-20 text-right font-bold text-emerald-900 bg-white border border-emerald-200 rounded-lg px-2 py-0.5 text-xs focus:ring-2 focus:ring-emerald-500">
+                  <span class="text-[10px] font-semibold text-emerald-700">€</span>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center text-xs text-emerald-800 pt-1">
                 <span>Startwert Topf 2: <strong id="initialPot2Val">40.000 €</strong></span>
                 <span class="text-[11px] text-emerald-700 font-semibold" id="fgAvgRateSummary">Ø 3,3 % p.a.</span>
               </div>
@@ -1308,7 +1326,11 @@
       setFieldVal('monthlySavings', s.monthlySavings || 0);
       setFieldVal('inflationRate', s.inflationRate);
       setFieldVal('pot1Months', s.pot1Months);
+      const minEl = document.getElementById('pot1MinAmountInput');
+      if (minEl) minEl.value = 0;
       setFieldVal('pot2Share', s.pot2Share);
+      const minEl2 = document.getElementById('pot2AmountInput');
+      if (minEl2) minEl2.value = 0;
       setFieldVal('returnPot1', s.returnPot1);
       setFieldVal('returnPot3', s.returnPot3);
       setFieldVal('simulationYears', s.simulationYears);
@@ -1538,7 +1560,9 @@
       const monthlySavings = Math.min(3000, Math.max(0, parseFloat(document.getElementById('monthlySavingsInput')?.value) || 0));
       const inflationRate = Math.max(0, Math.min(10, parseFloat(document.getElementById('inflationRateInput').value) || 0)) / 100;
       const pot1Months = Math.max(0, Math.min(60, parseInt(document.getElementById('pot1MonthsInput').value) || 0));
+      const pot1MinAmount = Math.max(0, parseInt(document.getElementById('pot1MinAmountInput')?.value) || 0);
       const pot2Share = Math.min(100, Math.max(0, parseFloat(document.getElementById('pot2ShareInput').value) || 0)) / 100;
+      const pot2Amount = Math.max(0, parseInt(document.getElementById('pot2AmountInput')?.value) || 0);
       const returnPot1 = Math.max(0, Math.min(10, parseFloat(document.getElementById('returnPot1Input').value) || 0)) / 100;
       const returnPot3 = Math.max(-5, Math.min(15, parseFloat(document.getElementById('returnPot3Input').value) || 0)) / 100;
       const simulationYears = Math.min(50, Math.max(accumulationYears + 1, parseInt(document.getElementById('simulationYearsInput').value) || 30));
@@ -1552,7 +1576,9 @@
         monthlySavings,
         inflationRate,
         pot1Months,
+        pot1MinAmount,
         pot2Share,
+        pot2Amount,
         returnPot1,
         returnPot3,
         simulationYears,
@@ -1604,22 +1630,13 @@
       let estCapital = params.startCapital;
       let estMonthly = params.monthlyWithdrawal;
 
-      if (params.accumulationYears > 0) {
-        // Muss exakt der Ansparlogik in simulateSinglePath entsprechen:
-        // nominale ETF-Rendite (nicht real) UND die Sparrate berücksichtigen.
-        const r3 = params.returnPot3;
-        const annualSavings = (params.monthlySavings || 0) * 12;
-        for (let i = 0; i < params.accumulationYears; i++) {
-          estCapital = annualSavings > 0
-            ? estCapital * (1 + r3) + annualSavings * (1 + r3 / 2)
-            : estCapital * (1 + r3);
-        }
-        estMonthly = estMonthly * Math.pow(1 + params.inflationRate, params.accumulationYears);
-      }
-
-      const initialPot1 = Math.min(estCapital, params.pot1Months * estMonthly);
+      const initialPot1 = Math.min(estCapital, Math.max(params.pot1MinAmount || 0, params.pot1Months * estMonthly));
       const remainingCapital = Math.max(0, estCapital - initialPot1);
-      const initialPot2 = remainingCapital * params.pot2Share;
+      
+      let initialPot2 = remainingCapital * params.pot2Share;
+      if (params.pot2Amount > 0) {
+        initialPot2 = Math.min(remainingCapital, params.pot2Amount);
+      }
 
       const totalShareRaw = festgeldAccounts.reduce((sum, a) => sum + (parseFloat(a.share) || 0), 0);
       const totalSharePct = Math.round(totalShareRaw * 10) / 10;
@@ -1629,13 +1646,14 @@
       const isFullCoverage = Math.abs(totalSharePct - 100) < 0.1;
       const shareSumBadge = document.getElementById('fgShareSumBadge');
       if (shareSumBadge) {
-        shareSumBadge.textContent = `${totalSharePct}%`;
         if (isFullCoverage) {
+          shareSumBadge.textContent = `100%`;
           shareSumBadge.className = 'text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded';
           shareSumBadge.title = 'Summe der Anteile: 100%';
         } else {
-          shareSumBadge.className = 'text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded';
-          shareSumBadge.title = `Achtung: Summe ist ${totalSharePct}% (sollte 100% sein)`;
+          shareSumBadge.textContent = `Summe: ${totalSharePct}`;
+          shareSumBadge.className = 'text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200';
+          shareSumBadge.title = `Gewichtungssumme: ${totalSharePct}`;
         }
       }
 
@@ -1644,11 +1662,11 @@
         if (isFullCoverage) {
           potBadge.textContent = '100% Gedeckt';
           potBadge.className = 'text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200';
-          potBadge.title = 'Topf-Aufteilung und Festgeld-Anteile sind vollständig zu 100% aufgeteilt';
+          potBadge.title = 'Festgeld-Anteile sind auf 100% normiert';
         } else {
-          potBadge.textContent = `${totalSharePct}% Aufgeteilt`;
-          potBadge.className = 'text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300';
-          potBadge.title = `Achtung: Festgeld-Anteile ergeben aktuell ${totalSharePct}% statt 100%`;
+          potBadge.textContent = `Relativ Gewichtet`;
+          potBadge.className = 'text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200';
+          potBadge.title = `Festgeld-Anteile werden relativ zueinander gewichtet`;
         }
       }
 
@@ -1692,11 +1710,11 @@
               </div>
             </div>
             <div>
-              <label class="text-[10px] text-slate-500 block">Anteil Topf 2</label>
+              <label class="text-[10px] text-slate-500 block" title="Relativer Anteil oder fester €-Betrag">Gewichtung</label>
               <div class="flex items-center gap-0.5">
-                <input type="number" data-field="share" min="1" max="100" step="0.5" value="${acc.share}"
+                <input type="number" data-field="share" min="0" step="0.5" value="${acc.share}"
                   class="w-full text-right font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-xs focus:ring-1 focus:ring-emerald-500">
-                <span class="text-slate-400 text-[10px]">%</span>
+                <span class="text-slate-400 text-[10px]" title="Teile oder %">T</span>
               </div>
             </div>
           </div>
@@ -1900,24 +1918,23 @@
       let totalFgShare = festgeldAccounts.reduce((sum, a) => sum + (parseFloat(a.share) || 0), 0);
       if (totalFgShare <= 0) totalFgShare = 1;
 
-      if (accumulationYears > 0) {
-        // In der Ansparphase liegt das Startkapital zu 100 % im Aktien-ETF (Topf 3)
-        initialPot1 = 0;
-        initialPot2 = 0;
-        initialPot3 = startCapital;
-      } else {
-        initialPot1 = Math.min(startCapital, pot1Months * monthlyWithdrawal);
-        const remainingCapital = Math.max(0, startCapital - initialPot1);
-        initialPot2 = remainingCapital * pot2Share;
-        initialPot3 = remainingCapital - initialPot2;
+      // Die Kapitalaufteilung erfolgt nun IMMER auf Basis der aktuellen User-Eingaben
+      // (auch vor einer Ansparphase), da der Nutzer seinen Puffer explizit jetzt setzen will.
+      const startMonthlyWithdrawal = accumulationYears > 0 ? (monthlyWithdrawal * Math.pow(1 + inflationRate, accumulationYears)) : monthlyWithdrawal;
+      initialPot1 = Math.min(startCapital, Math.max(params.pot1MinAmount || 0, pot1Months * startMonthlyWithdrawal));
+      const remainingCapital = Math.max(0, startCapital - initialPot1);
+      initialPot2 = remainingCapital * pot2Share;
+      if (params.pot2Amount > 0) {
+        initialPot2 = Math.min(remainingCapital, params.pot2Amount);
       }
+      initialPot3 = remainingCapital - initialPot2;
 
       // Konten der Festgeld-Treppe initialisieren
       let activeFgAccounts = festgeldAccounts.map(a => {
         const dur = Math.max(1, parseInt(a.duration) || 1);
         const share = Math.max(0, parseFloat(a.share) || 0);
         const rate = (parseFloat(a.rate) || 0) / 100;
-        const initialBalance = (accumulationYears > 0) ? 0 : initialPot2 * (share / totalFgShare);
+        const initialBalance = initialPot2 * (share / totalFgShare);
         return {
           id: a.id,
           name: a.name,
@@ -1999,7 +2016,7 @@
         }
 
         // ==========================================
-        // 1. ANSPARPHASE (100% ETF Vermögensaufbau)
+        // 1. ANSPARPHASE (Vermögensaufbau)
         // ==========================================
         if (isAccumulating) {
           const annualSavings = monthlySavings * 12;
@@ -2011,6 +2028,22 @@
             event = 'Ansparphase (Zinseszins)';
             pot3 = pot3 * (1 + r3);
           }
+
+          // Topf 1 Verzinsung
+          const currentReturnPot1 = getPot1ReturnForYear(y);
+          pot1 = pot1 * (1 + currentReturnPot1);
+
+          // Topf 2 Verzinsung und Rollier-Logik
+          activeFgAccounts.forEach(acc => {
+            if (acc.balance > 0) {
+              acc.balance += acc.balance * acc.rate;
+            }
+            acc.remainingYears -= 1;
+            if (acc.remainingYears <= 0) {
+              acc.remainingYears = acc.duration;
+              acc.rate = getFestgeldRateForYear(y, acc.baseRate);
+            }
+          });
 
           // Kumulierte Inflation fortschreiben
           cumulativeInflation *= (1 + currentYearInflation);
@@ -2026,8 +2059,8 @@
             annualWithdrawal: 0,
             actualWithdrawal: 0,
             cumulativeWithdrawn: 0,
-            pot1: 0,
-            pot2: 0,
+            pot1: Math.max(0, pot1),
+            pot2: Math.max(0, getPot2Total()),
             pot3: Math.max(0, pot3),
             totalCapital: Math.max(0, totalCapitalNow),
             event: event
@@ -2042,25 +2075,11 @@
         // Hinweis: Der Laufzeit-Countdown der Festgelder laeuft erst am JAHRESENDE
         // (Abschnitt C2). Waehrend des laufenden Jahres gilt die Tranche als gebunden.
 
-        // Initialisierung der 3 Töpfe exakt zum Rentenstart
+        // Festhalten der Werte zum Rentenstart
         if (accumulationYears > 0 && isFirstWithdrawalYear) {
-          const startMonthlyWithdrawal = monthlyWithdrawal * cumulativeInflation;
-          const neededPot1 = Math.min(pot3, pot1Months * startMonthlyWithdrawal);
-          pot1 = neededPot1;
-          pot3 -= neededPot1;
-
-          const neededPot2 = pot3 * pot2Share;
-          pot3 -= neededPot2;
           pot1AtRetirement = pot1;
-          pot2AtRetirement = neededPot2;
+          pot2AtRetirement = getPot2Total();
           pot3AtRetirement = pot3;
-
-          activeFgAccounts.forEach(acc => {
-            const share = Math.max(0, parseFloat(acc.share) || 0);
-            acc.balance = neededPot2 * (share / totalFgShare);
-            acc.remainingYears = acc.duration; // Frische, volle Laufzeit zum Rentenstart
-            acc.rate = getFestgeldRateForYear(y, acc.baseRate);
-          });
         }
 
         // A. Entnahmehöhe nach gewählter Strategie berechnen
@@ -2218,7 +2237,7 @@
         // fortgeschrieben mit der Inflation DIESES Jahres - deshalb getInflationForYear(y).
         const inflationForNextYearWithdrawal = getInflationForYear(y);
         const nextMonthlyWithdrawal = (annualWithdrawal > 0 ? (annualWithdrawal / 12) : monthlyWithdrawal) * (1 + inflationForNextYearWithdrawal);
-        const targetPot1 = pot1Months * nextMonthlyWithdrawal;
+        const targetPot1 = Math.max(params.pot1MinAmount || 0, pot1Months * nextMonthlyWithdrawal);
         let rebalanceEventNote = '';
 
         if (pot1 < targetPot1) {
@@ -2349,9 +2368,9 @@
 
       return {
         params,
-        initialPot1: pot1AtRetirement,
-        initialPot2: pot2AtRetirement,
-        initialPot3: pot3AtRetirement,
+        initialPot1: initialPot1,
+        initialPot2: initialPot2,
+        initialPot3: initialPot3,
         history,
         bankruptYear,
         capitalAtRetirementStart,
@@ -2752,12 +2771,16 @@
         }
       }
 
-      // Erklärung Topf 1: Nach einer Ansparphase wird der Puffer aus der bis dahin
-      // aufgelaufenen (nominal höheren) Monatsentnahme gebildet.
+      // Erklärung Topf 1:
       const pot1BasisMonthly = accYears > 0
         ? params.monthlyWithdrawal * Math.pow(1 + params.inflationRate, accYears)
         : params.monthlyWithdrawal;
-      document.getElementById('pot1Explanation').textContent = `(${params.pot1Months} × ${currencyFmt.format(pot1BasisMonthly)})`;
+      const calcP1 = params.pot1Months * pot1BasisMonthly;
+      if ((params.pot1MinAmount || 0) > calcP1) {
+        document.getElementById('pot1Explanation').textContent = `(Min. Puffer aktiv)`;
+      } else {
+        document.getElementById('pot1Explanation').textContent = `(${params.pot1Months} × ${currencyFmt.format(pot1BasisMonthly)})`;
+      }
 
       // Topf 3 %-Label
       const pot3SharePct = Math.round((1 - params.pot2Share) * 100);
@@ -3430,7 +3453,9 @@
         sa: params.startAge,
         sy: params.simulationYears,
         p1m: params.pot1Months,
+        p1ma: params.pot1MinAmount,
         p2s: +(params.pot2Share * 100).toFixed(1),
+        p2a: params.pot2Amount,
         r1: +(params.returnPot1 * 100).toFixed(2),
         r3: +(params.returnPot3 * 100).toFixed(2),
         ay: params.accumulationYears || 0,
@@ -3558,7 +3583,15 @@
         if (state.sa !== undefined) document.getElementById('startAge').value = state.sa;
         if (state.sy !== undefined) setFieldVal('simulationYears', state.sy);
         if (state.p1m !== undefined) setFieldVal('pot1Months', state.p1m);
+        if (state.p1ma !== undefined) {
+          const el = document.getElementById('pot1MinAmountInput');
+          if (el) el.value = state.p1ma;
+        }
         if (state.p2s !== undefined) setFieldVal('pot2Share', state.p2s);
+        if (state.p2a !== undefined) {
+          const el = document.getElementById('pot2AmountInput');
+          if (el) el.value = state.p2a;
+        }
         if (state.r1 !== undefined) setFieldVal('returnPot1', state.r1);
         if (state.r3 !== undefined) setFieldVal('returnPot3', state.r3);
 
@@ -3844,6 +3877,14 @@
       bindSync('monthlySavings', 'monthlySavingsInput', () => { renderFestgeldList(); debouncedRunSimulation(); });
 
       document.getElementById('startAge').addEventListener('input', debouncedRunSimulation);
+      const minAmountInput = document.getElementById('pot1MinAmountInput');
+      if (minAmountInput) {
+        minAmountInput.addEventListener('input', () => { renderFestgeldList(); debouncedRunSimulation(); });
+      }
+      const p2AmountInput = document.getElementById('pot2AmountInput');
+      if (p2AmountInput) {
+        p2AmountInput.addEventListener('input', () => { renderFestgeldList(); debouncedRunSimulation(); });
+      }
 
       // Prüfen, ob URL-Hash existiert
       let loaded = false;
